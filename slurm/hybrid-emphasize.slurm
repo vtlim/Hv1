@@ -41,6 +41,11 @@ eqSteps=500000  # 1 ns
 nSteps=5500000  # 11 ns
 #------------------------------------------#
 
+### Comments to code explained using an example of 20 normal windows,
+### with the last one broken up to 5, leading to 19+5=24 windows.
+### This means dLambda = 0.05 and dLastLam = 0.01.
+### Note that sign of dLambda and dLastLam should be the same.
+
 module load namd/2.11-MPISMP
 module list
 
@@ -49,71 +54,88 @@ cd $SLURM_SUBMIT_DIR
 echo "Working Directory:" pwd
 echo 'Array ID number:' $SLURM_ARRAY_TASK_ID
 
-lambda=$SLURM_ARRAY_TASK_ID
+window=$SLURM_ARRAY_TASK_ID
+
+### Get absolute value by removing any minus sign from dLambda
+absDL=${dLambda//-}
+### Get value of what would be the normal last window (e.g. 20.000).
+normlast=$(echo "1 / $absDL" | bc -l)
+### Get value of lambda at the start of the last window (e.g. 0.95).
+lastlambda=$(echo "1-$absDL" | bc -l)
+
+### For positive dLambda, set up forward calculations.
 if (( $(echo "$dLambda > 0" | bc -l) )); then
    wdir="FEP_F"
    mkdir $wdir; cd $wdir
-   
-   normlast=$(echo "1 / $dLambda" | bc -l) # e.g., last window is 20
-   lastlambda=$(echo "1-$dLambda" | bc -l)
-   echo "lastlambda: $lastlambda"   
-   echo "normlast: $normlast"   
-   echo "is greater? $(echo "$lambda >= $normlast" | bc -l)"
-   ### Break the last window into smaller pieces. 
-   if (( $(echo "$lambda >= $normlast" | bc -l) )); then
-       lindex=$(echo "$lambda - $normlast + 1" | bc -l) # e.g. 24-20+1 = 4
-       lindex=${lindex%.*} # remove trailing zeroes
 
+   ### Break the last window into smaller windows, by dLastLam. 
+   if (( $(echo "$window >= $normlast" | bc -l) )); then
+       ### Get list of lambda values for last window (e.g. 0.95 0.96 0.97 0.98 0.99 1.00)
        lastlist=()
-       end=$(echo "1+$dLambda" | bc -l)
-       #for K in $(seq $lastlambda $dLastLam $end); do
        for K in $(seq $lastlambda $dLastLam 1); do
-          echo "VTL-KK: $K"
           lastlist+=("$K")
-       done  
+       done
+
+       ### Get index of correct lambda to use in lastlist.
+       ### E.g. if window is 24, lindex is 24-20+1 = 4, and lastlist[4]=0.99.
+       lindex=$(echo "$window - $normlast + 1" | bc -l) 
+       lindex=${lindex%.*} # remove trailing zeroes
        FEPcmd="runFEPmin     ${lastlist[$lindex-1]}   ${lastlist[$lindex]}   $dLastLam   $nSteps  $nMinSteps $temp"
 
-   ### Handle cases for all windows except last
+   ### If window number < normlast, treat as normal.
    else
        lambdalist=()
        for L in $(seq 0 $dLambda $lastlambda); do
-          echo "VTL-LL: $L"
           lambdalist+=("$L")
        done
-       FEPcmd="runFEPmin     ${lambdalist[$lambda-1]}   ${lambdalist[$lambda]}   $dLambda   $nSteps  $nMinSteps $temp"
+       FEPcmd="runFEPmin     ${lambdalist[$window-1]}   ${lambdalist[$window]}   $dLambda   $nSteps  $nMinSteps $temp"
    fi
 
-
-
-
+### For negative dLambda, set up reverse calculations.
 else
    wdir="FEP_R"
    mkdir $wdir; cd $wdir
-   lambdalist=()
-   for L in $(seq 1 $dLambda 0); do
-      lambdalist+=("$L")
-   done
-   if [ $lambda -eq 1 ]; then
-      FEPcmd="runFEPmin     1   ${lambdalist[$lambda]}   $dLambda  $nSteps  $nMinSteps $temp" 
+
+   ### Number of subwindows = dLambda / dLastLambda
+   numSubWin=$(echo "$dLambda / $dLastLam" | bc -l)
+   numSubWin=${numSubWin%.*} # remove trailing zeroes
+
+   ### E.g. The first five windows of rev ~ the last five windows of fwd.
+   if [ $window -le $numSubWin ]; then
+       ### Get list of lambda values for last window (e.g. 1.00 0.99 0.98 0.97 0.96 0.95)
+       lastlist=()
+       for K in $(seq 1 $dLastLam $lastlambda); do
+          lastlist+=("$K")
+       done
+       FEPcmd="runFEPmin     ${lastlist[$window-1]}   ${lastlist[$window]}   $dLastLam   $nSteps  $nMinSteps $temp"
+
    else
-      FEPcmd="runFEPmin     ${lambdalist[$lambda-1]}   ${lambdalist[$lambda]}   $dLambda   $nSteps  $nMinSteps $temp" 
+       lambdalist=()
+       for L in $(seq $lastlambda $dLambda 0); do
+          lambdalist+=("$L")
+       done
+
+       ### Get index of correct lambda to use in lastlist.
+       ### E.g. if window is 6, lindex is 6-5-1 = 0, and lambdalist[0]=0.95.
+       lindex=$(echo "$window - $numSubWin - 1" | bc -l) 
+       lindex=${lindex%.*} # remove trailing zeroes
+       FEPcmd="runFEPmin     ${lambdalist[$lindex]}   ${lambdalist[$lindex+1]}   $dLambda   $nSteps  $nMinSteps $temp" 
    fi
 fi
 
-if [ $lambda -lt 10 ]; then
-   lambda_dir=`printf "lambda_0%s" $lambda`
-   fname="alchemy0$lambda"
+### Get names for window directory and input files.
+if [ $window -lt 10 ]; then
+   lambda_dir=`printf "lambda_0%s" $window`
+   fname="alchemy0$window"
 else
-   lambda_dir=`printf "lambda_%s" $lambda`
-   fname="alchemy$lambda"
+   lambda_dir=`printf "lambda_%s" $window`
+   fname="alchemy$window"
 fi
 
 if [ ! -d "$lambda_dir" ]; then
    mkdir $lambda_dir
 fi
 
-echo $FEPcmd
-exit #################################################################################################
 
 slurm_startjob(){
 cd $lambda_dir
