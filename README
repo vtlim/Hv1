@@ -1,0 +1,55 @@
+# Workflow, detailed
+
+01. Get pdb from last frame of trajectory. In VMD, make sure that
+     (a) cell is aligned with axes 'pbc box -center origin'.
+     (b) membrane is parallel to xy plane, perpendicular to z axis.
+
+02. Move psf and pdb to 01_setup directory. In vim, edit mem_setup.tcl for the residue mutation, hybrid topology file, etc.
+
+03. In the 00_main dir, create copy of name.pdb to name.fep. Use vim to edit the beta values (next to last column) for the changing residue.
+    Use the third column as a guide, the atomtypes ending with A are disappearing, ending with B are appearing.
+    Hint: it might help to generate a temporary empty line before and after the -1 and 1 lines, for ease of viewing and editing. 
+     (a) -1.00 is the disappearing.
+     (b)  1.00 is the appearing.
+
+Double check the above. Just because it says F2A does not mean it's disappearing or appearing.
+
+04. In VMD, check name.fep file. "vmd file.psf -pdb file.fep". View with "source ../../../viewF2A.tcl".
+     (a) Change residue number in Tcl script if necessary.
+     (b) check cell alignment with axes. see code snippets below.
+     (c) Red atoms are disappearing and blue atoms are appearing (set color Beta).
+
+05. In 00_main file, edit alchemy.inp for periodic cell
+     (a) cellBasisVectors can come from pdb of trajectory (not the pdb from psfgen)
+     (b) ....  review all lines.
+
+06. Edit simulation settings in slurm script.
+
+07. Test a few jobs on nes partition (make sure files get read in correctly, etc.)
+
+08. Submit using hybrid slurm script using "sbatch -N 8 file.slurm"
+    (old) Submit entire array to ilg partition. 
+
+
+
+VMD Code Snippets
+  * measure center [atomselect top all] weight mass
+  * set minmax [measure minmax [atomselect top all]]
+  * molinfo top get {a b c}
+  *   in graphical representations: abs(x)>48 or abs(y)>48
+  * pbc box -center origin
+
+
+
+Ligand Removal
+  * vmdt -e file.pdb
+  * set sel [atomselect top "not resname GBI1"]
+  * $sel writepdb 15183_04_prot.pdb
+
+  Also comment GBI-related lines in the script to generate the psf (mem_setup.tcl)
+
+
+Additional resources:
+  * https://github.com/limn1/DTT
+  * NAMD FEP tutorial PDF and website
+
