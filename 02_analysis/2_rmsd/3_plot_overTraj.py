@@ -40,7 +40,7 @@ if not plotrmsd:
 
 
 
-os.chdir('/data12/cmf/limvt/hv1/04_fep/%s/%s/02_analysis/2_summaryTraj' % (pose, mut))
+os.chdir('/data12/cmf/limvt/hv1/04_fep/%s/%s/02_analysis/2_rmsd' % (pose, mut))
 
 with open(filename) as f:
     data = f.read()

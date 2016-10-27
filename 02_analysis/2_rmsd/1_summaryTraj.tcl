@@ -16,7 +16,7 @@ set dir /data12/cmf/limvt/hv1/04_fep/${pose}/${mut}
 
 # Edit file names at the very end.
 set psf ${dir}/00_main/15183-F150A.psf
-set out ${dir}/02_analysis/2_summaryTraj/endFrames.dcd
+set out ${dir}/02_analysis/2_rmsd/endFrames.dcd
 
 
 # =============================================================== #
@@ -49,7 +49,7 @@ foreach dcd $dcdlist {
 
 animate write dcd $out waitfor all
 
-set fo [open "${dir}/02_analysis/2_summaryTraj/README" "a"] 
+set fo [open "${dir}/02_analysis/2_rmsd/README" "a"] 
 puts $fo "\n\nDetails for summary trajectory:"
 puts $fo " - Name:\t$out"
 puts $fo " - Date:\t[clock format [clock seconds]]"

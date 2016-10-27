@@ -15,6 +15,7 @@
 #    https://github.com/choderalab/pymbar/blob/master/pymbar/bar.py
 
 from pymbar import BAR
+from pymbar import timeseries
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -87,74 +88,74 @@ def cat_fepout(fep_dir, rev=False):
 
 def ParseFEP( fep_file ):
 
-   """
-   Parse summary *.fepout files and return relevant data as dictionaries.
+    """
+    Parse summary *.fepout files and return relevant data as dictionaries.
 
-   Parameters
-   ----------
-   fep_file: string. Filename of the summarized results of all 
-                     *.fepout results in fep_dir.
+    Parameters
+    ----------
+    fep_file: string. Filename of the summarized results of all 
+                      *.fepout results in fep_dir.
 
-   Returns
-   -------
-   dEs_dict: dictionary of all the dE steps for each window (key=window int)
-             40 windows = 40 entries. Each key has x values for x num of steps.
-   dGs_dict: dictionary of all the dG steps for each window (key=window int)
-   window: dictionary of start dLambda and stop dLambda per each window. 
-           key is the integer lambda window number.
-   
-   """
-   dEs_dict = {} # dictionary of all the dE steps for each window (key)
-   dGs_dict = {} # dictionary of all the dG steps for each window (key)
-   elecs_dict = {} # dictionary of all the elec energies for each window (key)
-   vdws_dict = {} # dictionary of all the vdw energies for each window (key)
-   window = {} # dictionary for the dLambda string labels for each window
-   tempDE = [] # temp list to get all dEs in one window
-   tempDG = [] # temp list to get all dGs in one window
-   tempElec = [] # temp list to get all electrostatic energies of one window
-   tempVdw = [] # temp list to get all van der Waals energies of one window
-   parsing = False
-   i = 0
+    Returns
+    -------
+    dEs_dict: dictionary of all the dE steps for each window (key=window int)
+              40 windows = 40 entries. Each key has x values for x num of steps.
+    dGs_dict: dictionary of all the dG steps for each window (key=window int)
+    window: dictionary of start dLambda and stop dLambda per each window. 
+            key is the integer lambda window number.
+    
+    """
+    dEs_dict = {} # dictionary of all the dE steps for each window (key)
+    dGs_dict = {} # dictionary of all the dG steps for each window (key)
+    elecs_dict = {} # dictionary of all the elec energies for each window (key)
+    vdws_dict = {} # dictionary of all the vdw energies for each window (key)
+    window = {} # dictionary for the dLambda string labels for each window
+    tempDE = [] # temp list to get all dEs in one window
+    tempDG = [] # temp list to get all dGs in one window
+    tempElec = [] # temp list to get all electrostatic energies of one window
+    tempVdw = [] # temp list to get all van der Waals energies of one window
+    parsing = False
+    i = 0
 
-   # open and get data from fep summary file.
-   f = open(fep_file,'r')
-   data = f.readlines()
-   f.close()
+    # open and get data from fep summary file.
+    f = open(fep_file,'r')
+    data = f.readlines()
+    f.close()
 
-   for line in data:
-      l = line.strip().split()
+    for line in data:
+       l = line.strip().split()
 
-      if '#Free' in l:
-         tempDE_arr = np.asarray(tempDE) # convert tempDE to numpy array
-         tempDG_arr = np.asarray(tempDG) # convert tempDG to numpy array
-         tempElec_arr = np.asarray(tempElec) # convert tempElec to numpy array
-         tempVdw_arr = np.asarray(tempVdw) # convert tempVdw to numpy array
-         dEs_dict[i] = tempDE_arr # put all the dE values in the dictionary
-         dGs_dict[i] = tempDG_arr # put all the dG values in the dictionary
-         elecs_dict[i] = tempElec_arr # put all the dE values in the dictionary
-         vdws_dict[i] = tempVdw_arr # put all the dG values in the dictionary
-         window[i] =  " ".join(l[6:10]) # e.g. grab '[ 0.975 1 ]' join w/space b/t each
+       if '#Free' in l:
+          tempDE_arr = np.asarray(tempDE) # convert tempDE to numpy array
+          tempDG_arr = np.asarray(tempDG) # convert tempDG to numpy array
+          tempElec_arr = np.asarray(tempElec) # convert tempElec to numpy array
+          tempVdw_arr = np.asarray(tempVdw) # convert tempVdw to numpy array
+          dEs_dict[i] = tempDE_arr # put all the dE values in the dictionary
+          dGs_dict[i] = tempDG_arr # put all the dG values in the dictionary
+          elecs_dict[i] = tempElec_arr # put all the dE values in the dictionary
+          vdws_dict[i] = tempVdw_arr # put all the dG values in the dictionary
+          window[i] =  " ".join(l[6:10]) # e.g. grab '[ 0.975 1 ]' join w/space b/t each
 
-         # reset values for the next window of the summary file
-         i +=1 
-         tempDE = []
-         tempDG = []
-         tempElec = []
-         tempVdw = []
-         parsing = False
+          # reset values for the next window of the summary file
+          i +=1 
+          tempDE = []
+          tempDG = []
+          tempElec = []
+          tempVdw = []
+          parsing = False
 
-      # append the value in the 'dE' and 'dG' columns of *.fepout file
-      if parsing:
-         tempDE.append(float(l[6]))
-         tempDG.append(float(l[9]))
-         tempElec.append(float(l[3])-float(l[2]))
-         tempVdw.append(float(l[5])-float(l[4]))
+       # append the value in the 'dE' and 'dG' columns of *.fepout file
+       if parsing:
+          tempDE.append(float(l[6]))
+          tempDG.append(float(l[9]))
+          tempElec.append(float(l[3])-float(l[2]))
+          tempVdw.append(float(l[5])-float(l[4]))
 
-      # turn parsing on at section 'STARTING COLLECTION OF ENSEMBLE AVERAGE'
-      if '#STARTING' in l:
-         parsing = True
+       # turn parsing on at section 'STARTING COLLECTION OF ENSEMBLE AVERAGE'
+       if '#STARTING' in l:
+          parsing = True
 
-   return dEs_dict, dGs_dict, elecs_dict, vdws_dict, window
+    return dEs_dict, dGs_dict, elecs_dict, vdws_dict, window
 
 
 def DoBAR(fwds, revs, label):
@@ -166,7 +167,7 @@ def DoBAR(fwds, revs, label):
     Parameters
     ----------
     fwds: dictionary of forward work values for each window
-    revs: dictioary of reverse work values for each window
+    revs: dictionary of reverse work values for each window
     label: string label of what it is (only for printing output)
 
     Returns
@@ -177,17 +178,36 @@ def DoBAR(fwds, revs, label):
        
     """
 
+    fwd_ss = {} # subsampled version of fwds
+    rev_ss = {} # subsampled version of revs
+    dg_bar = np.zeros([len(fwds)], np.float64)  # allocate storage: dG steps
+    gsd_bar = np.zeros([len(fwds)], np.float64) # allocate storage: dG stdev steps
+    dgs = np.zeros([len(fwds)], np.float64)     # allocate storage: dG accumulated
+    gsdlist = np.zeros([len(fwds)], np.float64) # allocate storage: dG stdev accum
+
+    for key, value in fwds.iteritems(): # this notation changes in python3: http://tinyurl.com/j3uq3me
+        # compute correlation time
+        g = timeseries.statisticalInefficiency(value)
+        print("Correlation time for FWD window %5d is %10.3f" % (key,g))
+        # compute indices of UNcorrelated timeseries, then extract those samples
+        indices = timeseries.subsampleCorrelatedData(value, g)
+        fwd_ss[key] = value[indices]
+
+    for key, value in revs.iteritems(): # this notation changes in python3: http://tinyurl.com/j3uq3me
+        # compute correlation time
+        g = timeseries.statisticalInefficiency(value)
+        print("Correlation time for REV window %5d is %10.3f" % (key,g))
+        # compute indices of UNcorrelated timeseries, then extract those samples
+        indices = timeseries.subsampleCorrelatedData(value, g)
+        rev_ss[key] = value[indices]
+
     print "\n\nBAR estimator of free energy change:"
     print "\tRel. %s | %s change | uncertainty" % (label, label)
     print "---------------------------------------------------------"
-    
-    dg_bar = np.zeros([len(fwds)], np.float64)  # allocate storage: dG steps
-    gsd_bar = np.zeros([len(fwds)], np.float64) # allocate storage: dG stdev steps
-    dgs = np.zeros([len(fwds)], np.float64)     # allocate storage: dG values
-    gsdlist = np.zeros([len(fwds)], np.float64) # allocate storage: dG stdev values
-    
-    for kF, kR in zip(sorted(fwds.keys()), sorted(revs.keys(), reverse=True)):
-        dg_bar[kF], gsd_bar[kF] = BAR(fwds[kF],revs[kR])
+
+    # then apply BAR estimator to get dG for each step
+    for kF, kR in zip(sorted(fwd_ss.keys()), sorted(rev_ss.keys(), reverse=True)):
+        dg_bar[kF], gsd_bar[kF] = BAR(fwd_ss[kF],rev_ss[kR])
         print('\t%.4f   %.4f +- %.4f' % (np.sum(dg_bar), dg_bar[kF], gsd_bar[kF]))
     
     # calculate the net dG standard deviation = sqrt[ sum(s_i^2) ]
@@ -381,13 +401,13 @@ hist_plot(w_F, w_R, window_F, window_R, title, 'results')
 dg_plot(dGs_F, dGs_R, window_F, window_R, title, 'results')
 
 ### BAR analysis to combine fwd and rev windows for dG, elec, vdW
-alls = np.zeros(shape=(3, len(dGs_F)))
+alls = np.zeros(shape=(3, len(dGs_F))) # actual lists will be shorter bc subsampled
 sds = np.zeros(shape=(3, len(dGs_F)))
 alls[0], sds[0] = DoBAR(dGs_F, dGs_R, 'dG')
-alls[1], sds[1] = DoBAR(elecs_F, elecs_R, 'elec')
-alls[2], sds[2] = DoBAR(vdws_F, vdws_R, 'vdW')
+alls[1], sds[1] = DoBAR(elecs_F, elecs_R, 'elec') # more for qualitative interpretation
+alls[2], sds[2] = DoBAR(vdws_F, vdws_R, 'vdW')    # ditto ^
 
-## plot BAR summary results
+### plot BAR summary results
 title = 'Free energy change for F150A mutation'
 title += '\nof Hv1 (pose 15183_04) with 2GBI bound'
 gbar_plot(alls[0], sds[0], title, 'results')

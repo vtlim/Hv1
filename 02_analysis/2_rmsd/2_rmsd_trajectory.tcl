@@ -4,7 +4,7 @@
 
 # open the trajectory to run the RMSD calculation.
 mol new /data12/cmf/limvt/hv1/04_fep/15183_04/F150A-noGBI/00_main/15183-F150A.psf
-mol addfile /data12/cmf/limvt/hv1/04_fep/15183_04/F150A-noGBI/02_analysis/2_summaryTraj/endFrames.dcd waitfor all
+mol addfile /data12/cmf/limvt/hv1/04_fep/15183_04/F150A-noGBI/02_analysis/2_rmsd/endFrames.dcd waitfor all
 #mol addfile /pub/limvt/hv1/02_configs/15183_04/npt02.dcd waitfor all
 
 # file to output data for plotting
