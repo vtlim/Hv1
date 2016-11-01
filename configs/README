@@ -1,0 +1,8 @@
+
+ - contact_analysis.tcl (4) Tcl script to plot GBI-residue distance over trajectory
+ - plot_overTraj.py     (6) plot *.dat plots generated from (4) or (5)
+ - pose_dirs.txt        (2) list of configs to be used with (1)
+ - rmsd_trajectory.tcl  (5) Tcl script to plot RMSD of backbone, 4 residues, and GBI over traj
+ - viewAllConfigs.tcl   (1) view all configs at once
+ - viewer.tcl           (3) same as (1) except just view one
+

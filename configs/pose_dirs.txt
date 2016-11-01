@@ -1,0 +1,12 @@
+hv1-config-15159_gbi-pose-03
+hv1-config-15183_gbi-pose-04
+hv1-config-15183_gbi-pose-08
+hv1-config-17041_gbi-pose-03
+hv1-config-17041_gbi-pose-13
+hv1-config-17041_gbi-pose-19
+hv1-config-17120_gbi-pose-18
+hv1-config-17480_gbi-pose-06
+hv1-config-18629_gbi-pose-19
+hv1-config-19415_gbi-pose-10
+hv1-config-19460_gbi-pose-04
+hv1-config-19744_gbi-pose-09
