@@ -12,21 +12,27 @@ import matplotlib as mpl
 #pose = '17041_13'
 pose = '15183_04'
 
-mut = 'F150A-noGBI'
+mut = 'F150A'
+way = 'R'
 numWins = 20
 plotrmsd = True
+withLig = True
 
 if plotrmsd:
-    filename = "rmsd_endFrames.dat"
-    figname = "rmsd_endFrames-%s.png" % pose
-    figname = "rmsd_endFrames.png"
+    filename = "rmsd_endFrames-%s.dat" % way
+    figname = "rmsd_endFrames-%s.png" % way
     delimiter = " \t "
-    numCols = 1 # first n *data* (not time) columns
-#    cols = [1,3] # first and 3 data columns
+    plttitle = "RMSD at end of each %s lambda window,\npose %s, mutation %s" % (way, pose, mut)
     xlabel = "window"
     ylabel = "RMSD ($\AA$)"
-    plttitle = "RMSD of Hv1 Backbone (no 2GBI), pose %s" % (pose)
-    leglabel = ["TM backbone"]
+
+    if withLig:
+        cols = [1,3] # first and 3 data columns
+        leglabel = ["Hv1 TM backbone", "2GBI"]
+
+    if not withLig:
+        numCols = 1 # first n *data* (not time) columns
+        leglabel = ["TM backbone"]
 
 if not plotrmsd:
     filename = "hv1+gbi_contacts.dat"
@@ -50,7 +56,7 @@ with open(filename) as f:
 data = data.split('\n')[1:-1] # -1 gets not a blank line at end
 
 ### Generate list for x-axis
-x = np.arange(len(data))+1
+x = np.arange(len(data))
 
 ### Load data for y columns.
 y_mat = []
@@ -86,7 +92,7 @@ plt.xticks(np.arange(min(x), max(x)+1, 2.0))
 ### Color the rainbow.
 n, _ = y_mat.shape
 colors = mpl.cm.rainbow(np.linspace(0, 1, n))
-#colors = mpl.cm.rainbow(np.linspace(0, 0.4, n))
+#colors = mpl.cm.rainbow(np.linspace(0, 0.3, n))
 
 ### Plot the data.
 for color, y in zip(colors, y_mat):
