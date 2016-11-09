@@ -2,10 +2,27 @@
 # Usage: vmdt -e file.tcl
 # Adapted from Hv1 RMSD trajectory script from Andrew running poses
 
+
+# ========================== Variables ========================= #
+
+set pose "15183_04"
+set mut "F150A-noGBI"
+set way "F"
+set num_wins 20
+
+set dir /data12/cmf/limvt/hv1/04_fep/${pose}/${num_wins}windows/${mut}
+
+# Edit file names here.
+set psf ${dir}/00_main/15183-F150A.psf
+set dcd ${dir}/02_analysis/2_rmsd/endFrames.dcd
+
+
+# =============================================================== #
+
+
 # open the trajectory to run the RMSD calculation.
-mol new /data12/cmf/limvt/hv1/04_fep/15183_04/F150A-noGBI/00_main/15183-F150A.psf
-mol addfile /data12/cmf/limvt/hv1/04_fep/15183_04/F150A-noGBI/02_analysis/2_rmsd/endFrames.dcd waitfor all
-#mol addfile /pub/limvt/hv1/02_configs/15183_04/npt02.dcd waitfor all
+mol new $psf
+mol addfile $dcd waitfor all
 
 # file to output data for plotting
 set outDataFile [open rmsd_endFrames.dat w]
@@ -27,20 +44,25 @@ set all [atomselect top all]
 # calc rmsd for each frame.
 set num_steps [molinfo 0 get numframes]
 for {set frame 0} {$frame < $num_steps} {incr frame} {
+
     # get frame of interest
     $compprot frame $frame
     $compres frame $frame
     $compgbi frame $frame
+
     # compute transformation
     set trans_mat [measure fit $compprot $refprot]
+
     # do the alignment
     $compprot move $trans_mat
     $compres move $trans_mat
     $compgbi move $trans_mat
+
     # compute the RMSD
     set rmsdprot [measure rmsd $compprot $refprot]
 #    set rmsdres [measure rmsd $compres $refres]
 #    set rmsdgbi [measure rmsd $compgbi $refgbi]
+
     # print to file
     puts $outDataFile "$frame \t $rmsdprot"
 #    puts $outDataFile "$frame \t $rmsdprot \t $rmsdres \t $rmsdgbi"
