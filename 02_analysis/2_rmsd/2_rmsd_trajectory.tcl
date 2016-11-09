@@ -15,6 +15,7 @@ set dir /data12/cmf/limvt/hv1/04_fep/${pose}/${num_wins}windows/${mut}
 # Edit file names here.
 set psf ${dir}/00_main/15183-F150A.psf
 set dcd ${dir}/02_analysis/2_rmsd/endFrames.dcd
+set outDataFile [open rmsd_endFrames.dat w]
 
 
 # =============================================================== #
@@ -25,8 +26,7 @@ mol new $psf
 mol addfile $dcd waitfor all
 
 # file to output data for plotting
-set outDataFile [open rmsd_endFrames.dat w]
-puts $outDataFile "#Frame | helix backbone rmsd | Res112,150,181,211 rmsd | 2GBI rmsd (Angstroms)"
+puts $outDataFile "#Frame | helix backbone rmsd"
 #puts $outDataFile "#Frame | helix backbone rmsd | Res112,150,181,211 rmsd | 2GBI rmsd (Angstroms)"
 
 # set frame 0 as the reference

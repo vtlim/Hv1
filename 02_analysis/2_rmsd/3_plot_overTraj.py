@@ -13,18 +13,20 @@ import matplotlib as mpl
 pose = '15183_04'
 
 mut = 'F150A-noGBI'
+numWins = 20
 plotrmsd = True
 
 if plotrmsd:
     filename = "rmsd_endFrames.dat"
+    figname = "rmsd_endFrames-%s.png" % pose
+    figname = "rmsd_endFrames.png"
     delimiter = " \t "
     numCols = 1 # first n *data* (not time) columns
 #    cols = [1,3] # first and 3 data columns
-    xlabel = "time (ns)"
+    xlabel = "window"
     ylabel = "RMSD ($\AA$)"
     plttitle = "RMSD of Hv1 Backbone (no 2GBI), pose %s" % (pose)
     leglabel = ["TM backbone"]
-    figname = "rmsd_endFrames-%s.png" % pose
 
 if not plotrmsd:
     filename = "hv1+gbi_contacts.dat"
@@ -40,16 +42,15 @@ if not plotrmsd:
 
 
 
-os.chdir('/data12/cmf/limvt/hv1/04_fep/%s/%s/02_analysis/2_rmsd' % (pose, mut))
+os.chdir('/data12/cmf/limvt/hv1/04_fep/%s/%dwindows/%s/02_analysis/2_rmsd' \
+      % (pose, numWins, mut))
 
 with open(filename) as f:
     data = f.read()
-data = data.split('\n')[1:-1]
+data = data.split('\n')[1:-1] # -1 gets not a blank line at end
 
-### Load data for x column.
-x = [float(row.split(' ')[0]) for row in data]
-# Convert the x-axis to ns (based on 2 fs step)
-x = 0.002*np.array(x)
+### Generate list for x-axis
+x = np.arange(len(data))+1
 
 ### Load data for y columns.
 y_mat = []
@@ -59,6 +60,7 @@ try:
 except NameError:
     for i in range(1,numCols+1):
        y_mat.append([row.split(delimiter)[i] for row in data])
+
 y_mat = np.array(y_mat)
 
 ### Initialize figure.
@@ -74,6 +76,9 @@ for xtick in ax1.get_xticklabels():
 for ytick in ax1.get_yticklabels():
     ytick.set_fontsize(16)
 
+# set ticks for every other window
+plt.xticks(np.arange(min(x), max(x)+1, 2.0))
+
 ### Set plot limits.
 #axes = plt.gca()
 #axes.set_ylim([0,6])
@@ -85,7 +90,7 @@ colors = mpl.cm.rainbow(np.linspace(0, 1, n))
 
 ### Plot the data.
 for color, y in zip(colors, y_mat):
-    ax1.plot(x, y, color=color)
+    ax1.scatter(x, y, color=color)
 leg = ax1.legend(leglabel,loc=4)
 
 plt.savefig(figname)
