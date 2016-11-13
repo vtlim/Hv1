@@ -13,7 +13,7 @@ import matplotlib as mpl
 pose = '15183_04'
 
 mut = 'F150A'
-way = 'R'
+way = 'F'
 numWins = 20
 plotrmsd = True
 withLig = True
@@ -99,6 +99,7 @@ for color, y in zip(colors, y_mat):
     ax1.scatter(x, y, color=color)
 leg = ax1.legend(leglabel,loc=4)
 
+plt.grid()
 plt.savefig(figname)
 plt.show()
 
