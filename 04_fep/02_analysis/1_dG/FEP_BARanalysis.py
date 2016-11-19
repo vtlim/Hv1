@@ -28,13 +28,13 @@ import argparse
 # ------------------------- Functions ---------------------------- #
 
 
-numbers = re.compile(r'(\d+)') # parses a given value
 def numericalSort(value):
 
    """
    Parses some number. 5 would return ['5']. 5.4 would return ['5', '4'].
 
    """
+   numbers = re.compile(r'(\d+)') # parses a given value
    parts = numbers.split(value)
    parts[1::2] = list(map(int, parts[1::2]))
    return parts
