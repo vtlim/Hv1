@@ -8,13 +8,13 @@ import matplotlib as mpl
 
 # ============ Parameters ===================
 
-#pose = '17041_19'
+pose = '17041_19'
 #pose = '17041_13'
-pose = '15183_04'
+#pose = '15183_04'
 
 mut = 'F150A'
 way = 'F'
-numWins = 20
+numWins = 40
 plotrmsd = True
 withLig = True
 
@@ -27,7 +27,7 @@ if plotrmsd:
     ylabel = "RMSD ($\AA$)"
 
     if withLig:
-        cols = [1,3] # first and 3 data columns
+        cols = [1,2] # first and 2nd data columns
         leglabel = ["Hv1 TM backbone", "2GBI"]
 
     if not withLig:
@@ -48,8 +48,8 @@ if not plotrmsd:
 
 
 
-os.chdir('/data12/cmf/limvt/hv1/04_fep/%s/%dwindows/%s/02_analysis/2_rmsd' \
-      % (pose, numWins, mut))
+os.chdir('/data12/cmf/limvt/hv1/04_fep/%s/%s/02_analysis/2_rmsd' \
+      % (pose, mut))
 
 with open(filename) as f:
     data = f.read()
@@ -66,6 +66,7 @@ try:
 except NameError:
     for i in range(1,numCols+1):
        y_mat.append([row.split(delimiter)[i] for row in data])
+except IndexError: pass
 
 y_mat = np.array(y_mat)
 

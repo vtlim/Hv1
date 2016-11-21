@@ -10,16 +10,16 @@
 
 set skip 1
 
-set pose "15183_04"
-set mut "F150A-noGBI"
-set way "F"
-set num_wins 20
+set pose "17041_19"
+set mut "F150A"
+set way "R"
+set num_wins 40
 
-set dir /data12/cmf/limvt/hv1/04_fep/${pose}/${num_wins}windows/${mut}
+set dir /data12/cmf/limvt/hv1/04_fep/${pose}/${mut}
 
 # Edit file names here.
-set psf ${dir}/00_main/15183-F150A.psf
-set out ${dir}/02_analysis/2_rmsd/firstFrames.dcd
+set psf ${dir}/00_main/17041_19-F150A.psf
+set out ${dir}/02_analysis/2_rmsd/finalFrames-R.dcd
 
 # Don't forget to edit which frame selections you want (dopbc line)!
 
@@ -52,9 +52,9 @@ for {set i 1} {$i <= $num_wins} {incr i} {
 }
 
 foreach dcd $dcdlist {
-    #dopbc -file ${dcd} -frames 0:$skip:-1 -ref protein ;# get every skipth frame of whole traj
-    #dopbc -file ${dcd} -frames 499:1:500 -ref protein ;# get last? frame of whole traj
-    dopbc -file ${dcd} -frames 0:1:1 -ref protein ;# get first frame of whole traj
+    #dopbc -file ${dcd} -frames 0:$skip:-1 -ref protein ;# get every skipth frame
+    dopbc -file ${dcd} -frames 249:1:250 -ref protein ;# get last? frame
+    #dopbc -file ${dcd} -frames 0:1:1 -ref protein ;# get first frame of each window
 }
 
 animate write dcd $out waitfor all

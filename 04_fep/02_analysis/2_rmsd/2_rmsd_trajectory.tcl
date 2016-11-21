@@ -5,17 +5,17 @@
 
 # ========================== Variables ========================= #
 
-set pose "15183_04"
-set mut "F150A-noGBI"
+set pose "17041_19"
+set mut "F150A"
 set way "F"
-set num_wins 20
+set num_wins 40
 
-set dir /data12/cmf/limvt/hv1/04_fep/${pose}/${num_wins}windows/${mut}
+set dir /data12/cmf/limvt/hv1/04_fep/${pose}/${mut}
 
 # Edit file names here.
-set psf ${dir}/00_main/15183-F150A.psf
-set dcd ${dir}/02_analysis/2_rmsd/endFrames.dcd
-set outDataFile [open rmsd_endFrames.dat w]
+set psf ${dir}/00_main/17041_19-F150A.psf
+set dcd ${dir}/02_analysis/2_rmsd/finalFrames-${way}.dcd
+set outDataFile [open rmsd_endFrames-${way}.dat w]
 
 
 # =============================================================== #
@@ -26,7 +26,7 @@ mol new $psf
 mol addfile $dcd waitfor all
 
 # file to output data for plotting
-puts $outDataFile "#Frame | helix backbone rmsd"
+puts $outDataFile "#Frame | helix backbone rmsd | 2GBI rmsd (Angstroms)"
 #puts $outDataFile "#Frame | helix backbone rmsd | Res112,150,181,211 rmsd | 2GBI rmsd (Angstroms)"
 
 # set frame 0 as the reference
@@ -61,10 +61,10 @@ for {set frame 0} {$frame < $num_steps} {incr frame} {
     # compute the RMSD
     set rmsdprot [measure rmsd $compprot $refprot]
 #    set rmsdres [measure rmsd $compres $refres]
-#    set rmsdgbi [measure rmsd $compgbi $refgbi]
+    set rmsdgbi [measure rmsd $compgbi $refgbi]
 
     # print to file
-    puts $outDataFile "$frame \t $rmsdprot"
+    puts $outDataFile "$frame \t $rmsdprot \t $rmsdgbi"
 #    puts $outDataFile "$frame \t $rmsdprot \t $rmsdres \t $rmsdgbi"
 }
 exit

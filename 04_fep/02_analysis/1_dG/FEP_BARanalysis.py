@@ -284,12 +284,12 @@ def hist_plot(w_F, w_R, window_F, window_R, title, outfname):
     plt.suptitle(title)
 
     ### super-axis labels. locations are very finicky and likely need adjusting
-    if numWins == 40:
-        plt.text(-20.0, -180.0, '$\Delta$U (kcal/mol)', ha='center') # xlabel
-        plt.text(-46.5, 1100.0, 'frequency', va='center', rotation='vertical') # ylabel
-    if numWins == 20:
-        plt.text(-38.0, -260.0, '$\Delta$U (kcal/mol)', ha='center') # xlabel
-        plt.text(-85.0, 2100.0, 'frequency', va='center', rotation='vertical') # ylabel
+#    if numWins == 40:
+#        plt.text(-20.0, -180.0, '$\Delta$U (kcal/mol)', ha='center') # xlabel
+#        plt.text(-46.5, 1100.0, 'frequency', va='center', rotation='vertical') # ylabel
+#    if numWins == 20:
+#        plt.text(-38.0, -260.0, '$\Delta$U (kcal/mol)', ha='center') # xlabel
+#        plt.text(-85.0, 2100.0, 'frequency', va='center', rotation='vertical') # ylabel
     plt.savefig(outfname+'_dE-overlap.eps', format='eps')
     plt.clf()
 
@@ -350,12 +350,12 @@ def dg_plot(dGs_F, dGs_R, window_F, window_R, eqTime, totTime, title, outfname):
     plt.suptitle(title)
 
     ### super-axis labels. locations are very finicky and likely need adjusting
-    if numWins == 40:
-        plt.text(-6.5, -1.2, 'time (ns)', ha='center') # xlabel
-        plt.text(-20.0, 9.0, '$\Delta$G (kcal/mol)', va='center', rotation='vertical') # ylabel
-    if numWins == 20:
-        plt.text(-10.0, -2.5, 'time (ns)', ha='center') # xlabel
-        plt.text(-35.0, 6.5, '$\Delta$G (kcal/mol)', va='center', rotation='vertical') # ylabel
+#    if numWins == 40:
+#        plt.text(-6.5, -1.2, 'time (ns)', ha='center') # xlabel
+#        plt.text(-20.0, 9.0, '$\Delta$G (kcal/mol)', va='center', rotation='vertical') # ylabel
+#    if numWins == 20:
+#        plt.text(-10.0, -2.5, 'time (ns)', ha='center') # xlabel
+#        plt.text(-35.0, 6.5, '$\Delta$G (kcal/mol)', va='center', rotation='vertical') # ylabel
     plt.savefig(outfname+'_dGvTime.eps', format='eps')
     plt.clf()
 
