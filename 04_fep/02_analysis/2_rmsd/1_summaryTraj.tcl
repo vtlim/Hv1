@@ -12,14 +12,14 @@ set skip 1
 
 set pose "17041_19"
 set mut "F150A"
-set way "R"
+set way "F"
 set num_wins 40
 
 set dir /data12/cmf/limvt/hv1/04_fep/${pose}/${mut}
 
 # Edit file names here.
 set psf ${dir}/00_main/17041_19-F150A.psf
-set out ${dir}/02_analysis/2_rmsd/finalFrames-R.dcd
+set out ${dir}/02_analysis/2_rmsd/finalFrames-${way}.dcd
 
 # Don't forget to edit which frame selections you want (dopbc line)!
 
@@ -50,6 +50,10 @@ for {set i 1} {$i <= $num_wins} {incr i} {
     # get list of trajectories
     lappend dcdlist ${dir}/FEP_${way}/lambda_${win}/alchemy${win}.dcd
 }
+
+# add the first frame of the first dcd as reference
+dopbc -file [lindex $dcdlist 0] -frames 0:1:0 -ref protein
+
 
 foreach dcd $dcdlist {
     #dopbc -file ${dcd} -frames 0:$skip:-1 -ref protein ;# get every skipth frame

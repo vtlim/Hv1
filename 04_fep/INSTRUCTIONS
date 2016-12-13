@@ -6,18 +6,20 @@
 
 02. Move psf and pdb to 01_setup directory. In vim, edit mem_setup.tcl for the residue mutation, hybrid topology file, etc.
 
-03. In the 00_main dir, create copy of name.pdb to name.fep. Use vim to edit the beta values (next to last column) for the changing residue.
-    Use the third column as a guide, the atomtypes ending with A are disappearing, ending with B are appearing.
-    Hint: it might help to generate a temporary empty line before and after the -1 and 1 lines, for ease of viewing and editing. 
-     (a) -1.00 is the disappearing.
-     (b)  1.00 is the appearing.
+03. Edit .fep file:
+     (a) In 00_main dir, create copy of name.pdb to name.fep.
+     (b) In vim, search for "F2A" or whatever mutation it is.
+     (c) Edit next to last column - the beta values for the changing residue.
+         Just because F2A does NOT mean the beta value should be changed.
+         Use 3rd column as a guide, atomtypes ending with A disappear (-1.00 value), 
+            atomtypes ending with B are appearing (1.00 value).
+         Hint: it might help to generate a temporary empty line before & after the -1 and 1 lines. 
 
-Double check the above. Just because it says F2A does not mean it's disappearing or appearing.
-
-04. In VMD, check name.fep file. "vmd file.psf -pdb file.fep". View with "source ../../../viewF2A.tcl".
-     (a) Change residue number in Tcl script if necessary.
-     (b) check cell alignment with axes. see code snippets below.
-     (c) Red atoms are disappearing and blue atoms are appearing (set color Beta).
+04. In VMD, view name.fep file. "vmd file.psf -pdb file.fep". View with "source ../../../viewF2A.tcl".
+     (*) Change residue number in Tcl script if necessary.
+     (a) check cell alignment with axes. see code snippets below.
+     (b) Red atoms are disappearing and blue atoms are appearing (set color Beta).
+     (c) Also view in Licorice "all and within 3 of resname GBI1".
 
 05. In 00_main file, edit alchemy.inp for periodic cell
      (a) cellBasisVectors can come from pdb of trajectory (not the pdb from psfgen)
