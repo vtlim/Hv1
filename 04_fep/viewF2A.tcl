@@ -3,6 +3,7 @@
 
 color Display Background white
 display projection Orthographic
+display depthcue off
 
 set res 150
 set count 0
