@@ -1,0 +1,18 @@
+
+
+    Script Name                     Output
+    --------------------------------------------------------------------------------
+ 1. 01_reverseCluster.tcl           ./configurations.dat
+ 2. 02_viewConfigs.tcl              -
+ 3. combinePDBs.py                  x_together/*pdbs
+
+      This has the PDBs of the protein and ligand combined. The ligand is not in the
+      correct placement for the protein. These PDBs will be used to compare to full
+      Anton trajectory to compute the transformation matrix of the proteins, then
+      apply that matrix to the ligand (next step). After this move, the correctly
+      positioned ligand will be written out by itself (without the incorrectly placed
+      protein) in the next step.
+
+ 4. 04_centerLig.tcl                y_ligCentered/*pdbs 
+ 5. combinePDBs.py                  z_togetherCentered/*pdbs
+ 6. 06_viewAllConfigs.tcl           -
