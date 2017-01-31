@@ -1,0 +1,1 @@
+mpython FEP_BARanalysis.py -d ../../ -e 1 -t 5 -p -v > a.out

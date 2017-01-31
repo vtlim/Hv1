@@ -352,10 +352,10 @@ def dg_plot(dGs_F, dGs_R, window_F, window_R, eqTime, totTime, title, outfname):
     ### super-axis labels. locations are very finicky and likely need adjusting
 #    if numWins == 40:
 #        plt.text(-6.5, -1.2, 'time (ns)', ha='center') # xlabel
-#        plt.text(-20.0, 9.0, '$\Delta$G (kcal/mol)', va='center', rotation='vertical') # ylabel
+#        plt.text(-20.0, 9.0, 'work (kcal/mol)', va='center', rotation='vertical') # ylabel
 #    if numWins == 20:
 #        plt.text(-10.0, -2.5, 'time (ns)', ha='center') # xlabel
-#        plt.text(-35.0, 6.5, '$\Delta$G (kcal/mol)', va='center', rotation='vertical') # ylabel
+#        plt.text(-35.0, 6.5, 'work (kcal/mol)', va='center', rotation='vertical') # ylabel
     plt.savefig(outfname+'_dGvTime.eps', format='eps')
     plt.clf()
 

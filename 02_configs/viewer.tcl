@@ -8,6 +8,7 @@
 
 color Display Background white
 display projection Orthographic
+display depthcue off
 
 set count 0
 mol delrep 0 $count
