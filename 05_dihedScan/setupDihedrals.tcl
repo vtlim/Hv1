@@ -6,6 +6,9 @@
 #    - edit atom numbers, subtracting one (VMD starts with 0)
 # To do: make the above ^ command line arguments
 
+# Adapted from:
+# https://github.com/Eigenstate/vmd-python/blob/master/vmd/plugins/molefacture/molefacture_builder.tcl
+
 proc set_dihedral {molid movesel newval ind1 ind2 ind3 ind4} { 
   set tmpmolid $molid
   set dihedral [measure dihed [list [list $ind1 $tmpmolid] [list $ind2 $tmpmolid] [list $ind3 $tmpmolid] [list $ind4 $tmpmolid] ]] 
