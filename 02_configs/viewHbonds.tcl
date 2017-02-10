@@ -2,7 +2,7 @@
 # View last frame of all taut2 poses
 # Arguments: text file with poses, common dcd name, last frame number of common dcd
 # vmd -e viewHbonds.tcl -args pose_dirs2.txt npt02.dcd 4999
-# vmd -e viewHbonds.tcl -args 0
+# vmd -e viewHbonds.tcl
 
 set taut1 1
 
@@ -20,8 +20,8 @@ display depthcue off
 # load directories
 set fn [lindex $argv 0]
 
-# if 0 is put instead of some text file, assume view one molecule.
-if {$fn != 0} {
+# if no arguments, assume view one molecule.
+if { $argc > 0 } {
     set fp [open [lindex $argv 0] r]
     set dirs [read $fp]
     close $fp
@@ -33,7 +33,7 @@ if {$fn != 0} {
 set count 0
 foreach pose $dirs {
 
-  if {$fn != 0} {
+  if {$argc > 0} {
     cd $pose
     set psf [glob *psf]
     mol new $psf type {psf} first 0 last -1 step 1 waitfor all
