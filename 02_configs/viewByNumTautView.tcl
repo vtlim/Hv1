@@ -15,9 +15,9 @@ set taut1 1
 #set t1dir /pub/limvt/hv1/02_configs/1_tautomer
 set t1dir /pub/limvt/hv1/07_rotateF182/windows/
 
-#set view four
+set view four
 #set view lipid
-set view hbonds
+#set view hbonds
 
 #set frame1 2754
 #set frame2 2754
@@ -25,20 +25,21 @@ set frame1 2504
 set frame2 2504
 
 # load files into a single mol
-set commonPSF 1
+set commonPSF 0
 set psf /pub/limvt/hv1/07_rotateF182/01_setup/hHv1_t1f_npt10.psf
 
 # ==========================================
 
 if {$taut1} {
-    cd $t1dir
     set lig GBI1
+    cd $t1dir
 } else {
     set lig GBI2
 }
 
 display projection Orthographic
 display depthcue off
+menu graphics on
 
 # if no arguments, assume view one molecule.
 if { $argc > 0 } {
@@ -151,7 +152,7 @@ foreach pose $dirs {
         mol addrep $count
 
         # 3 rogue lipid
-        mol color Structure
+        mol color Name
         mol representation VDW 1.000000 12.000000
         mol selection lipid and resid 149
         mol material Opaque
@@ -268,15 +269,28 @@ foreach pose $dirs {
         mol modstyle 5 $count Licorice 0.300000 12.000000 12.000000
         mol modcolor 5 $count ColorID 11
 
+        # add representation for residues
+        mol addrep $count
+        mol modselect 6 $count protein and resid 182
+        mol modstyle 6 $count Licorice 0.300000 12.000000 12.000000
+        mol modcolor 6 $count ColorID 6
+
         # add representation for overlapping with 2GBI
         mol addrep $count
-        mol modselect 6 $count "not resname $lig and within 3 of resname $lig"
-        mol modstyle 6 $count Licorice 0.300000 12.000000 12.000000
-        mol modcolor 6 $count ColorID 1
+        mol modselect 7 $count "not resname $lig and within 3 of resname $lig"
+        mol modstyle 7 $count Licorice 0.300000 12.000000 12.000000
+        mol modcolor 7 $count ColorID 1
+
+        # rogue lipid
+        mol addrep $count
+        mol modselect 8 $count "lipid and resid 149"
+        mol modstyle 8 $count VDW 1.000000 12.000000
+        mol modcolor 8 $count Name
+
         # hide displays for ease of viewing
-        mol off $count           ;# don't display anything to start
-        mol showrep $count 1 0   ;# don't show protein
-        mol showrep $count 6 0   ;# don't show overlapping stuff
+#        mol off $count           ;# don't display anything to start
+#        mol showrep $count 1 0   ;# don't show protein
+        mol showrep $count 7 0   ;# don't show overlapping stuff
         display resetview
 
     }
@@ -290,3 +304,4 @@ foreach pose $dirs {
         cd ../../
     }
 }
+
