@@ -1,0 +1,169 @@
+set num 52
+#############################################################
+## JOB DESCRIPTION                                         ##
+#############################################################
+
+# Hv1 monomer with docked 2GBI(+1) pose and lipids
+#   solvated with Na+Cl ions and TIP3P water
+# Umbrella sampling to determine free energy contribution
+#   for rotating F182.
+
+#############################################################
+## ADJUSTABLE PARAMETERS                                   ##
+#############################################################
+
+structure       /pub/limvt/hv1/07_rotateF182/01_setup/pose17_F150A.psf
+coordinates     /pub/limvt/hv1/07_rotateF182/01_setup/pose17_F150A.pdb
+set output      npt01
+
+# Continuing a job from the restart files
+if {0} {
+set lastrun        ""
+firsttimestep      0
+binCoordinates     $lastrun.restart.coor
+binVelocities      $lastrun.restart.vel  ;# remove the "temperature" entry if you use this!
+extendedSystem	   $lastrun.restart.xsc
+colvarsInput       $lastrun.restart.colvars.state ;# continue prev run
+} 
+
+### Set temperature only if starting a new run. If continuing,
+### comment temperature and uncomment binCoordinates and binVelocities
+set temperature    300
+
+
+#############################################################
+## SIMULATION PARAMETERS                                   ##
+#############################################################
+
+### Input
+paraTypeCharmm	    on
+parameters	    /data/users/ageragot/toppar/par_all36_prot.prm
+parameters	    /data/users/ageragot/toppar/par_all36_lipid.prm
+parameters	    /data/users/ageragot/toppar/toppar_water_ions.jaf.str
+parameters	    /data/users/ageragot/toppar/par_all36_cgenff.prm
+parameters	    /data/users/ageragot/toppar/gbi_final.str
+
+
+### NOTE: Do not set the initial velocity temperature if you 
+### have also specified a .vel restart file!
+
+temperature         $temperature
+
+
+### Periodic Boundary Conditions
+### NOTE: Do not set the periodic cell basis if you have also 
+### specified an .xsc restart file!
+if {1} {
+cellBasisVector1    80.    0.   0.
+cellBasisVector2     0.   80.   0.
+cellBasisVector3     0.    0.   91.
+cellOrigin         -3.13  -0.25  -0.13
+}
+
+#wrapWater           on
+#wrapAll             on
+
+
+### Force-Field Parameters
+exclude             scaled1-4
+1-4scaling          1.0
+cutoff              12.0
+switching           on
+switchdist          10.0
+pairlistdist        16.0
+vdwForceSwitching   yes  
+
+
+### Integrator Parameters
+timestep            2.0  ;# 2fs/step
+rigidBonds          all  ;# needed for 2fs steps
+nonbondedFreq       1
+fullElectFrequency  2
+stepspercycle       20
+
+
+### PME (for full-system periodic electrostatics)
+PME                 on
+PMEProcessors	    6
+PMEGridSpacing	    1.0
+
+
+### Constant Temperature Control
+langevin            on    ;# do langevin dynamics
+langevinDamping     1     ;# damping coefficient (gamma) of 5/ps
+langevinTemp        $temperature
+
+### Constant Pressure Control (variable volume)
+useGroupPressure      yes ;# needed for 2fs steps
+useFlexibleCell       yes  ;# no for water box, yes for membrane
+useConstantArea       yes  ;# no for water box, yes for membrane
+langevinPiston        on
+langevinPistonTarget  1.0 ;# in bar
+langevinPistonPeriod  200
+langevinPistonDecay   100
+langevinPistonTemp    $temperature
+
+
+### Output Files 
+outputname	   $output
+outputEnergies     1000
+outputTiming	   1000 
+outputPressure     1000
+
+restartname	   $output
+restartfreq        1000     
+
+DCDfile		   $output.dcd
+DCDfreq            1000
+DCDUnitCell	   yes
+
+XSTfile		   $output.xst
+xstFreq            10000
+
+
+#############################################################
+## EXTRA PARAMETERS                                        ##
+#############################################################
+
+### Put here any custom parameters that are specific to 
+### this job (e.g., SMD, TclForces, etc...)
+
+colvars	         on
+colvarsConfig    colvars.tcl
+
+### Electric Field (units of kcal/(mol A e)
+eFieldOn     	   yes
+eField		   0. 0. 0.14  ;# depolarizing field (kcal/(mol A e))
+
+### Fixed Atoms Constraint (set PDB beta-column to 1 for fixed)
+#fixedAtoms          on
+#fixedAtomsFile      lipidMin-04.fix
+#fixedAtomsCol       B
+#fixedAtomsForces    on
+
+### Harmonic Restraints
+#constraints	     on
+#consref       	     hHv1_open_wGBI.pdb
+#conskfile     	     harm_const.cnst
+#conskcol      	     B
+
+margin	       	     3
+
+### TCL Forces
+#tclforces	     on
+#tclforcesscript     forces.tcl
+
+#############################################################
+## EXECUTION SCRIPT                                        ##
+#############################################################
+
+### Minimization
+minimize            5000
+reinitvels          $temperature
+
+#foreach i {0.5 0.25 0.1 0.05 0} {
+#	constraintScaling $i
+#	run 50000 ;# 0.1ns
+#}	  
+
+run 2500000 ;# 5ns
