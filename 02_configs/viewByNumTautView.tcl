@@ -275,22 +275,28 @@ foreach pose $dirs {
         mol modstyle 6 $count Licorice 0.300000 12.000000 12.000000
         mol modcolor 6 $count ColorID 6
 
+        # add representation for residues
+        mol addrep $count
+        mol modselect 7 $count protein and resid 185
+        mol modstyle 7 $count Licorice 0.300000 12.000000 12.000000
+        mol modcolor 7 $count ColorID 23
+
         # add representation for overlapping with 2GBI
         mol addrep $count
-        mol modselect 7 $count "not resname $lig and within 3 of resname $lig"
-        mol modstyle 7 $count Licorice 0.300000 12.000000 12.000000
-        mol modcolor 7 $count ColorID 1
+        mol modselect 8 $count "not resname $lig and within 3 of resname $lig"
+        mol modstyle 8 $count Licorice 0.300000 12.000000 12.000000
+        mol modcolor 8 $count ColorID 1
 
         # rogue lipid
         mol addrep $count
-        mol modselect 8 $count "lipid and resid 149"
-        mol modstyle 8 $count VDW 1.000000 12.000000
-        mol modcolor 8 $count Name
+        mol modselect 9 $count "lipid and resid 149"
+        mol modstyle 9 $count VDW 1.000000 12.000000
+        mol modcolor 9 $count Name
 
         # hide displays for ease of viewing
 #        mol off $count           ;# don't display anything to start
 #        mol showrep $count 1 0   ;# don't show protein
-        mol showrep $count 7 0   ;# don't show overlapping stuff
+        mol showrep $count 8 0   ;# don't show overlapping stuff
         display resetview
 
     }
