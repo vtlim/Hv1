@@ -4,7 +4,7 @@
 
 # Usage: vmdt -e file.tcl -args homedir withGBI
 #   - homedir: full path ending with pose and mutation, e.g. /path/to/19415-10/a1_F150A
-#   - withGBI: 0 False, 1 True
+#   - withGBI: 0 noGBI, 1 taut1, 2 taut2
 #
 # vim to replace all foo with bar: :%s/foo/bar/g
 #
@@ -111,7 +111,7 @@ foreach way [list "F" "R"] {
     # =============================================================== #
     
     # file to output data for plotting
-    if {$withGBI} {
+    if {$withGBI == 1 || $withGBI == 2} {
       puts $outDataFile "# Frame | helix backbone rmsd | 2GBI rmsd (Angstroms)"
     } else {
       puts $outDataFile "# Frame | helix backbone rmsd (Angstroms)"
@@ -119,11 +119,13 @@ foreach way [list "F" "R"] {
     
     # set frame 0 as the reference
     set refprot [atomselect top "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}" frame 0]
-    set refgbi [atomselect top "segname GBI1 and noh" frame 0]
+    if {$withGBI == 1} {set refgbi [atomselect top "segname GBI1 and noh" frame 0] }
+    if {$withGBI == 2} {set refgbi [atomselect top "segname GBI2 and noh" frame 0] }
     
     # selections being compared.
     set compprot [atomselect top "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}"]
-    set compgbi [atomselect top "segname GBI1 and noh"]
+    if {$withGBI == 1} {set compgbi [atomselect top "segname GBI1 and noh"]}
+    if {$withGBI == 2} {set compgbi [atomselect top "segname GBI2 and noh"]}
     
     set all [atomselect top all]
     
@@ -145,7 +147,7 @@ foreach way [list "F" "R"] {
         # compute the RMSD
         set rmsdprot [measure rmsd $compprot $refprot]
     
-        if {$withGBI} {
+        if {$withGBI == 1 || $withGBI == 2} {
           set rmsdgbi [measure rmsd $compgbi $refgbi]
           puts $outDataFile "$frame \t $rmsdprot \t \t $rmsdgbi"
         } else {
