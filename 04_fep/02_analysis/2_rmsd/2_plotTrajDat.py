@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Usage: python -f /full/path/with/filename.dat --lig
+# Usage: python 2_plotTrajDat.py -f /full/path/with/filename.dat --lig
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,20 +14,27 @@ def main(**kwargs):
 
     pose = opt['filename'].split('/')[-5]
     mut = opt['filename'].split('/')[-4]
-    way = re.search('.lastFrames\-(.+?).dat',opt['filename']).group(1)
-    figname = re.search('.rmsd/(.+?).dat',opt['filename']).group(1)
 
     # how to process the data file
-    if opt['lig']:
+    if opt['chain']:
+        way = re.search('.byChain\-(.+?).dat',opt['filename']).group(1)
+        figname = re.search('.rmsd/(.+?).dat',opt['filename']).group(1)
+        cols = [1,2,3,4,5] # first five correspond to protein
+        leglabel = ["Hv1 TM backbone", "S1 backbone","S2 backbone","S3 backbone","S4 backbone"]
+    elif opt['lig']:
+        way = re.search('.avgByWin\-(.+?).dat',opt['filename']).group(1)
+        figname = re.search('.rmsd/(.+?).dat',opt['filename']).group(1)
         cols = [1,2] # first and 2nd data columns
         leglabel = ["Hv1 TM backbone", "2GBI"]
     else:
+        way = re.search('.avgByWin\-(.+?).dat',opt['filename']).group(1)
+        figname = re.search('.rmsd/(.+?).dat',opt['filename']).group(1)
         numCols = 1 # first n *data* (not time) columns
         leglabel = ["TM backbone"]
     delimiter = " \t "
 
     # figure labeling details
-    plttitle = "RMSD at end of each %s lambda window,\npose %s, mutation %s" % (way, pose, mut)
+    plttitle = "Average RMSD for %s windows\npose %s, mutation %s" % (way, pose, mut)
     xlabel = "window"
     ylabel = "RMSD ($\AA$)"
 
@@ -38,6 +45,7 @@ def main(**kwargs):
     
     ### Generate list for x-axis
     x = np.arange(len(data))
+    x = x+1 # since no zero window
     
     ### Load data for y columns.
     y_mat = []
@@ -50,7 +58,7 @@ def main(**kwargs):
     except IndexError: pass
     
     y_mat = np.array(y_mat)
-    
+    print y_mat 
     ### Initialize figure.
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
@@ -68,13 +76,14 @@ def main(**kwargs):
     plt.xticks(np.arange(min(x), max(x)+1, 2.0))
     
     ### Set plot limits.
-    #axes = plt.gca()
-    #axes.set_ylim([0,6])
+    axes = plt.gca()
+    axes.set_ylim([0,6])
+    if opt['chain']: axes.set_ylim([0,2])
     
     ### Color the rainbow.
     n, _ = y_mat.shape
-    #colors = mpl.cm.rainbow(np.linspace(0, 1, n))
-    colors = mpl.cm.rainbow(np.linspace(0, 0.3, n))
+    colors = mpl.cm.rainbow(np.linspace(0, 1, n))
+    #colors = mpl.cm.rainbow(np.linspace(0, 0.3, n))
     
     ### Plot the data.
     for color, y in zip(colors, y_mat):
@@ -95,6 +104,8 @@ if __name__ == "__main__":
                         help="Full path filename of *.dat file from RMSD analysis")
     parser.add_argument("--lig", action="store_true", default=False,
                         help="Use flag if ligand RMSD is in *.dat file")
+    parser.add_argument("--chain", action="store_true", default=False,
+                        help="Use flag if decomposing protein RMSD by chain")
 
     args = parser.parse_args()
     opt = vars(args)

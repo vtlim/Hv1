@@ -42,9 +42,11 @@ proc set_dihedral {molid movesel newval ind1 ind2 ind3 ind4} {
 mol new "gbi-tautomer2.pdb" type {pdb} first 0 last -1 step 1 waitfor -1
 set guanidino [atomselect 0 "index 0 1 2 3 4 16 17"]
 
-for {set angle 0} {$angle < 360} {incr angle 1} {
+for {set angle 0} {$angle < 360} {incr angle 30} {
     set_dihedral 0 $guanidino $angle 1 5 6 7
-    mkdir ../angles-qm/$angle
-    [atomselect top "all"] writepdb ../angles-qm/$angle/gbi2-$angle.pdb 
+    #mkdir angles/$angle
+    #[atomselect top "all"] writepdb angles/$angle/gbi2-$angle.pdb 
+    [atomselect top "all"] writepdb angles/gbi2-$angle.pdb 
 }
+exit
 

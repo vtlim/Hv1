@@ -62,11 +62,19 @@ proc rmsdTraj {molID withGBI} {
 
     # set selections from reference frame.
     set refprot [atomselect 0 "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}" frame 0]
+    set refprot1 [atomselect 0 "protein and backbone and {{resid 100 to 125}}" frame 0]
+    set refprot2 [atomselect 0 "protein and backbone and {{resid 134 to 160}}" frame 0]
+    set refprot3 [atomselect 0 "protein and backbone and {{resid 168 to 191}}" frame 0]
+    set refprot4 [atomselect 0 "protein and backbone and {{resid 198 to 220}}" frame 0]
     if {$withGBI == 1} {set refgbi [atomselect 0 "segname GBI1 and noh" frame 0] }
     if {$withGBI == 2} {set refgbi [atomselect 0 "segname GBI2 and noh" frame 0] }
     
     # set selections being compared.
     set compprot [atomselect $molID "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}"]
+    set compprot1 [atomselect $molID "protein and backbone and {{resid 100 to 125}}"]
+    set compprot2 [atomselect $molID "protein and backbone and {{resid 134 to 160}}"]
+    set compprot3 [atomselect $molID "protein and backbone and {{resid 168 to 191}}"]
+    set compprot4 [atomselect $molID "protein and backbone and {{resid 198 to 220}}"]
     if {$withGBI == 1} {set compgbi [atomselect $molID "segname GBI1 and noh"]}
     if {$withGBI == 2} {set compgbi [atomselect $molID "segname GBI2 and noh"]}
     
@@ -77,6 +85,10 @@ proc rmsdTraj {molID withGBI} {
     
         # get frame of interest
         $compprot frame $frame
+        $compprot1 frame $frame
+        $compprot2 frame $frame
+        $compprot3 frame $frame
+        $compprot4 frame $frame
         if {$withGBI == 1 || $withGBI == 2} {$compgbi frame $frame}
     
         # compute transformation & do alignment
@@ -86,7 +98,15 @@ proc rmsdTraj {molID withGBI} {
     
         # compute the RMSD
         set rmsdprot [measure rmsd $compprot $refprot]
+        set rmsdprot1 [measure rmsd $compprot1 $refprot1]
+        set rmsdprot2 [measure rmsd $compprot2 $refprot2]
+        set rmsdprot3 [measure rmsd $compprot3 $refprot3]
+        set rmsdprot4 [measure rmsd $compprot4 $refprot4]
         lappend listprot $rmsdprot
+        lappend listprot1 $rmsdprot1
+        lappend listprot2 $rmsdprot2
+        lappend listprot3 $rmsdprot3
+        lappend listprot4 $rmsdprot4
         if {$withGBI == 1 || $withGBI == 2} {
           set rmsdgbi [measure rmsd $compgbi $refgbi]
           lappend listgbi $rmsdgbi
@@ -99,9 +119,15 @@ proc rmsdTraj {molID withGBI} {
     } else {
         set avggbi NaN
     }
-    set avgprot [average $listprot]
 
-    return [list $avgprot $avggbi]
+
+    set avgprot [average $listprot]
+    set avgprot1 [average $listprot1]
+    set avgprot2 [average $listprot2]
+    set avgprot3 [average $listprot3]
+    set avgprot4 [average $listprot4]
+
+    return [list $avgprot $avgprot1 $avgprot2 $avgprot3 $avgprot4 $avggbi]
 }
 
 
@@ -119,11 +145,11 @@ set molID 1  ;# the reference pdb will be molID 0
 foreach way [list "F" "R"] {
 
     # define output file for RMSDs
-    set outDataFile [open ${homedir}/02_analysis/2_rmsd/rmsd_avgByWin-${way}.dat w]
+    set outDataFile [open ${homedir}/02_analysis/2_rmsd/rmsd_avgByWin_byChain-${way}.dat w]
     if {$withGBI == 1 || $withGBI == 2} {
-      puts $outDataFile "# Win | helix backbone rmsd | 2GBI rmsd (Angstroms)"
+      puts $outDataFile "# Win | helix backbone rmsd | TM helix 1 | TM helix 2 | TM helix 3 | TM helix 4 | 2GBI rmsd (Angstroms)"
     } else {
-      puts $outDataFile "# Win | helix backbone rmsd (Angstroms)"
+      puts $outDataFile "# Win | helix backbone rmsd | TM helix 1 | TM helix 2 | TM helix 3 | TM helix 4 (Angstroms)"
     }
 
 
@@ -150,9 +176,9 @@ foreach way [list "F" "R"] {
 
         # write info
         if {$withGBI == 1 || $withGBI == 2} {
-          puts $outDataFile "$molID \t [lindex $rmsdlist 0] \t \t [lindex $rmsdlist 1]"
+          puts $outDataFile "$molID \t [lindex $rmsdlist 0] \t [lindex $rmsdlist 1] \t [lindex $rmsdlist 2] \t [lindex $rmsdlist 3] \t [lindex $rmsdlist 4] \t [lindex $rmsdlist 5]"
         } else {
-          puts $outDataFile "$molID \t [lindex $rmsdlist 0] \t"
+          puts $outDataFile "$molID \t [lindex $rmsdlist 0] \t [lindex $rmsdlist 1] \t [lindex $rmsdlist 2] \t [lindex $rmsdlist 3] \t [lindex $rmsdlist 4]"
         }
 
         mol delete $molID
