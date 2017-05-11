@@ -190,6 +190,23 @@ def SubtractRestraintE(filename, fConst):
 
 
 def plotDihedScan(x, y, pdict, toSave, toShow, x2=None, y2=None):
+    """
+    Generate scatter plot given lists of xy data. Optionally, can 
+      plot two sets of data on the same plot.
+
+    Parameters
+    ----------
+    x: list of floats
+    y: list of floats
+    pdict: dictionary with plot details. should contain keys for
+      'title','figname'. If plotting 2, should also contain
+      'color1','color2','label1','label2'.
+    toSave: Boolean, save figure
+    toShow: Boolean, show figure
+    x2: second list of x floats, optional 
+    y2: second list of y floats, optional
+    
+    """
 
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
@@ -222,8 +239,8 @@ def plotDihedScan(x, y, pdict, toSave, toShow, x2=None, y2=None):
     plt.grid()
     plt.grid(which='both', color='0.65',linestyle='-')
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    if opt['save'] == True: plt.savefig(pdict['figname'],bbox_inches='tight')
-    if opt['show'] == True: plt.show()
+    if toSave == True: plt.savefig(pdict['figname'],bbox_inches='tight')
+    if toShow == True: plt.show()
     plt.ioff()
     plt.close()
     
