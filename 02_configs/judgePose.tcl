@@ -15,23 +15,21 @@
 # ================= TCL PROCEDURES =================
 
 #  [ benzAngle ] returns angles (degrees, range +-90) between two benzo planes,
-#  - one on 2gbi, one on F150
-#  - uses coordinates of three atoms specified on each ring
-#  - extension ideas: can edit to take in arguments specifying
-#    atomselect keywords (e.g. considering other Phe's, ...)
-
-#  [ benzDist ]  returns distance (Angstroms) between two benzo centers
-#  [ guanAngle ] returns angle between NCN plane on guanidino on R211 and 2gbi
-#  [ guanDist ]  returns central carbon distance of guan groups (guanidino, R211)
-#  [ measDihed ] returns 2gbi dihed angle. defined by CNCN atoms used in dihed scan
-#                NOTE / TODO: only specified for 2gbi TAUTOMER 1
+#    - one on 2gbi, one on F150
+#    - uses coordinates of three atoms specified on each ring
+#    - extension ideas: can edit to take in arguments specifying
+#      atomselect keywords (e.g. considering other Phe's, ...)
+#  [ benzDist ]   returns distance (Angstroms) between two benzo centers
+#  [ guanAngle ]  returns angle between NCN plane on guanidino on R211 and 2gbi
+#  [ guanDist ]   returns central carbon distance of guan groups (guanidino, R211)
+#  [ measDihed ]  returns 2gbi dihed angle. defined by CNCN atoms used in dihed scan
+#                 NOTE / TODO: only specified for 2gbi TAUTOMER 1
+#  [ rogueLipid ] returns the resname&resid of popc (if any) who's C21 or C31 is
+#                 within 10 A of N214 ND2 atom.
 
 # Further work...?
 #  [ aspImidDist ]
 
-
-# do we know that d112 really contacts imid...?????
-# maybe not but can just evaluate and compare for all
 
 proc planeAngle {list1 list2} {
 
@@ -80,7 +78,7 @@ proc planeAngle {list1 list2} {
     
     # scale to plus or minus 90
     if {$degs > 90} {set degs [expr {$degs - 180}]}
-    return $degs
+    return [format %.3f $degs]
 }
 
 proc guanAngle {molID} {
@@ -98,7 +96,7 @@ proc guanAngle {molID} {
     set g2 [atomselect $molID "resname GBI1 and name C"]
     set g3 [atomselect $molID "resname GBI1 and name N2"]
 
-    return [planeAngle [list $f1 $f2 $f3] [list $g1 $g2 $g3]]
+    return [format %.3f [planeAngle [list $f1 $f2 $f3] [list $g1 $g2 $g3]]]
 }
 
 proc benzAngle {molID} {
@@ -118,7 +116,7 @@ proc benzAngle {molID} {
     set g2 [atomselect $molID "resname GBI1 and name C6"]
     set g3 [atomselect $molID "resname GBI1 and name C7"]
 
-    return [planeAngle [list $f1 $f2 $f3] [list $g1 $g2 $g3]]
+    return [format %.3f [planeAngle [list $f1 $f2 $f3] [list $g1 $g2 $g3]]]
 
 }
 
@@ -127,7 +125,7 @@ proc benzDist {molID} {
     set vec1 [measure center [atomselect $molID "protein and resid 150 and name CG CD2 CE2 CZ CE1 CD1"]]
     set vec2 [measure center [atomselect $molID "resname GBI1 and name C2 C3 C4 C5 C6 C7"]]
     set dist [veclength [vecsub $vec1 $vec2]]
-    return $dist
+    return [format %.3f $dist]
 }
 
 
@@ -135,7 +133,7 @@ proc guanDist {molID} {
     set vec1 [measure center [atomselect $molID "protein and resid 211 and name CZ"]]
     set vec2 [measure center [atomselect $molID "resname GBI1 and name C"]]
     set dist [veclength [vecsub $vec1 $vec2]]
-    return $dist
+    return [format %.3f $dist]
 }
 
 proc measDihed {molID} {
@@ -145,8 +143,23 @@ proc measDihed {molID} {
     set a4 [[atomselect $molID "resname GBI1 and name N3"] get index] ;# unprot imid N
     set phi [measure dihed "$a1 $a2 $a3 $a4" molid $molID]
     unset a1 a2 a3 a4
-    return $phi
+    return [format %.3f $phi]
+}
+
+proc rogueLipid {molID} {
+    set sel1 [atomselect $molID "name C21 C31"]
+    set sel2 [atomselect $molID "protein and resid 214 and name ND2"]
+    set lists [measure contacts 10 $sel1 $sel2]
+    set lipindlist [lindex $lists 0]
+    set asnindlist [lindex $lists 1]
     
+    foreach i $lipindlist j $asnindlist {
+        set dist [measure bond [list $i $j] molid $molID]
+        lappend answer "[lindex [[atomselect $molID "index $i"] get {resname resid name}] 0]"
+        lappend answer [format %.3f $dist]
+    }
+    return $answer
+
 }
 
 proc evalAll {outputfile header} {
@@ -188,6 +201,12 @@ proc evalAll {outputfile header} {
         puts $outFile "[molinfo $i get name]\t $x "
     }
 
+    # measure and print potentially high lipid mols
+    puts $outFile "\n# molID\t\t\tC21 C31 within 10 A of N214(ND2)"
+    foreach i [molinfo list] {
+        set x [rogueLipid $i]
+        puts $outFile "\n[molinfo $i get name]\n  $x "
+    }
     close $outFile
     
 }    
