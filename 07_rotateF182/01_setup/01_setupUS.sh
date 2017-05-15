@@ -8,10 +8,10 @@
 # incr    = incremental step going from min to max
 #
 # Before using, you should have: 
-#  * Base namd input file
-#  * Base colvars input file
+#  * Base namd input file, like equil1.inp
+#  * Base colvars input file, like colvars.tcl
 #     > with general values for colvarstrajfrequency, forceConstant, etc.
-#  * Base job submission script
+#  * Base job submission script, like namd-multicore.sh
 #  * Main directory that will house all windows
 #
 # You can make the colvars and output files different names
@@ -21,9 +21,9 @@
 
 cd /pub/limvt/hv1/07_rotateF182/windows
 
-qsub=/pub/limvt/hv1/07_rotateF182/01_setup/win-namd.sh
-colvprod=/pub/limvt/hv1/07_rotateF182/01_setup/win-colv.tcl
-prodinp=/pub/limvt/hv1/07_rotateF182/01_setup/win-equil.inp
+qsub=/pub/limvt/hv1/07_rotateF182/01_setup/namd-multicore.sh
+colvprod=/pub/limvt/hv1/07_rotateF182/01_setup/colvars.tcl
+prodinp=/pub/limvt/hv1/07_rotateF182/01_setup/equil1.inp
 
 # ======================================
 
@@ -36,7 +36,7 @@ while [ "$curC" -le "$maxC" ]; do
   echo $curC
 
   # make subdirectories
-  subd=angle${curC}
+  subd=${curC}
   if [ ! -d "$subd" ]; then
     mkdir "$subd"
   else
@@ -52,7 +52,6 @@ while [ "$curC" -le "$maxC" ]; do
   # edit and copy production files
   sed -i "s/centers.*/centers        $curC/g" $colvprod
   cp $colvprod "$subd/colvars.tcl"
-
   cp $prodinp "$subd/equil1.inp"
 
   curC=`expr "$curC" + "$incr"`;

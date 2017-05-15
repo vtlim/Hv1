@@ -11,7 +11,7 @@
 module load  NAMD-multicore/2.11
 
 # We define $CORES in Grid Engine to make life easier.  The $CORES
-# environment variable containts the number of cores allocated
+# environment variable contains the number of cores allocated
 # to this job.
 
 # Replace the input / output files:
