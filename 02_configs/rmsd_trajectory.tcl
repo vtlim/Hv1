@@ -28,7 +28,8 @@ if {$withGBI == 1} {
 
 # open the trajectory to run the RMSD calculation.
 mol new $inpsf
-mol addfile $indcd type {dcd} first 0 last -1 step 1 waitfor -1
+#mol addfile $indcd type {dcd} first 0 last -1 step 1 waitfor -1
+mol addfile $indcd type {dcd} first 0 last -1 step 20 waitfor -1
 
 # file to output data for plotting
 set outDataFile [open rmsd.dat w]
@@ -41,27 +42,31 @@ set refgbi [atomselect top "$GBI" frame 0]
 
 # selections being compared.
 set compprot [atomselect top "protein and backbone and {{resid 98 to 126} or {resid 134 to 160} or {resid 169 to 191} or {resid 198 to 221}}"]
-set compres [atomselect top "protein and resid 150 112 211 181"]
 set compgbi [atomselect top "$GBI"]
-
+set compres [atomselect top "protein and resid 150 112 211 181"]
 set all [atomselect top all]
 
 # calc rmsd for each frame.
 set num_steps [molinfo 0 get numframes]
 for {set frame 0} {$frame < $num_steps} {incr frame} {
+
     # get frame of interest
+    $all frame $frame
     $compprot frame $frame
     $compres frame $frame
     $compgbi frame $frame
+
     # compute transformation
     set trans_mat [measure fit $compprot $refprot]
-    # do the alignment
-    $compprot move $trans_mat
-    $compgbi move $trans_mat
+
+    # do the alignment. move all else sidechains won't get moved w/refprot
+    $all move $trans_mat
+
     # compute the RMSD
     set rmsdprot [measure rmsd $compprot $refprot]
     set rmsdres [measure rmsd $compres $refres]
     set rmsdgbi [measure rmsd $compgbi $refgbi]
+
     # print to file
     puts $outDataFile "$frame \t $rmsdprot \t $rmsdres \t $rmsdgbi"
 }
