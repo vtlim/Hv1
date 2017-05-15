@@ -28,8 +28,7 @@ if {$withGBI == 1} {
 
 # open the trajectory to run the RMSD calculation.
 mol new $inpsf
-#mol addfile $indcd type {dcd} first 0 last -1 step 1 waitfor -1
-mol addfile $indcd type {dcd} first 0 last -1 step 20 waitfor -1
+mol addfile $indcd type {dcd} first 0 last -1 step 1 waitfor -1
 
 # file to output data for plotting
 set outDataFile [open rmsd.dat w]
