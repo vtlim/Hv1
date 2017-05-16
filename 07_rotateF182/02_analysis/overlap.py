@@ -1,64 +1,80 @@
 #!/usr/bin/env python
 
 # Purpose: Plot histograms of all umbrella sampling windows altogether; 
-#    they should overlap.
-# TODO: make command line arguments
-# Usage: python file.py
+#    they should overlap. Reads in colvars output .traj files from NAMD.
+# Results setup: single directory with all traj files named
+#    a file named `npt01.colvarsXX.traj` where XX is the value of the 
+#    collective variable.
+# Note that python script arguments refer to how to process files. For the
+#    min and max values inside the data files, modify np.histogram line in plot.
 
 import os
 import numpy as np
 import matplotlib.pyplot as p
 
-# -------------------- Variables ------------------ #
 
-# end with /
-hdir="/pub/limvt/hv1/07_rotateF182/withF2A/"
-
-plotAll = False   # glob and histogram all subdirs
-
-# if plotAll=False, specify range of windows to plot
-# full range for f182 is minC=-130, maxC=80
-minC=-180
-#maxC=-120
-maxC=190  # add 'incr' to actual desired stop pt. maxC=150 really means 140.
-incr=10
-
-eqt = 0  # equil time to discard. 1000 = 1 ns
-
-trajf = "npt01.colvars.traj"
-figname = "fromF2A_all.png"
 # ------------------------------------------------- #
 
-os.chdir(hdir)
+def overlap(**kwargs):
 
-data = []
-for i in range(minC,maxC,incr):
-    subdir="angle"+str(i)
-    print(subdir)
-
-    tfile=os.path.join(hdir+subdir,trajf)
-    if not os.path.isfile(tfile):
-        print("%s not found." % (tfile))
-        continue
-
-    with open(tfile) as f:
-        lines = f.readlines()[eqt:]
-
-        zlist = []
-        for line in lines:
-            parts = line.split() 
-            if not parts[0].startswith("#"): zlist.append(float(parts[1]))
-    data.append(zlist)
+    hdir = opt['indir']+'/'
+    opt['wmax']=int(opt['wmax'])+int(opt['winc'])
+    opt['wmin']=int(opt['wmin'])
+    opt['winc']=int(opt['winc'])
+    eqt=int(opt['eqt'])
+    figname=opt['output']
     
-p.figure(figsize=(20,8))
-for i, zlist in enumerate(data):
-    print(i, len(zlist), min(zlist), max(zlist))
-    y,binEdges = np.histogram(zlist,bins=100,range=(-180,180))
-    bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
-    p.plot(bincenters,y,'-')
-p.tick_params(axis='both', which='major', labelsize=18)
-p.xlabel("F182 dihedral angle (deg)",fontsize=18)
-p.ylabel("count",fontsize=18)
+    data = []
+    for i in range(opt['wmin'],opt['wmax'],opt['winc']):
+    
+        tfile=os.path.join(hdir,'npt01.colvars'+str(i)+'.traj')
+        if not os.path.isfile(tfile):
+            print("%s not found." % (tfile))
+            continue
+        if os.path.getsize(tfile) < 1000:
+            print("%s is incomplete." % (tfile))
+            continue
+    
+        with open(tfile) as f:
+            lines = f.readlines()[eqt:]
+    
+            zlist = []
+            for line in lines:
+                parts = line.split() 
+                if not parts[0].startswith("#") and not parts[0].startswith("@"):
+                    zlist.append(float(parts[1]))
+        data.append(zlist)
+        
+    p.figure(figsize=(20,8))
+    for i, zlist in enumerate(data):
+        print(i, len(zlist), min(zlist), max(zlist))
+        #y,binEdges = np.histogram(zlist,bins=100,range=(0,360))
+        y,binEdges = np.histogram(zlist,bins=100,range=(-180,180))
+        bincenters = 0.5*(binEdges[1:]+binEdges[:-1])
+        p.plot(bincenters,y,'-')
+    p.tick_params(axis='both', which='major', labelsize=18)
+    p.xlabel("F182 dihedral angle (deg)",fontsize=18)
+    p.ylabel("count",fontsize=18)
+    
+    p.savefig(os.path.join(hdir,figname))
+    p.show()
 
-p.savefig(os.path.join(hdir+"../02_analysis/02_overlap/",figname))
-p.show()
+if __name__ == "__main__": 
+    import argparse
+    parser = argparse.ArgumentParser() 
+    parser.add_argument("-i", "--indir", 
+                        help="Name of the input directory with data files.")
+    parser.add_argument("-a", "--wmin", 
+                        help="Minimum value of all windows. (int)")
+    parser.add_argument("-b", "--wmax",
+                        help="Maximum value of all windows. (int)")
+    parser.add_argument("-c", "--winc",
+                        help="Increment between window reference value. (int)")
+    parser.add_argument("-e", "--eqt", default=0,
+                        help="Equil time to discard. 1000 = 1 ns?") 
+    parser.add_argument("-o", "--output", default='overlap.png',
+                        help="Name of the output file.")
+ 
+    args = parser.parse_args() 
+    opt = vars(args) 
+    overlap(**opt) 

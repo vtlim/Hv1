@@ -50,7 +50,6 @@ if {$withGBI == 1} {
 
 # loop over frames
 set frames [molinfo top get numframes]
-set ligand "resname GBI1 and noh"
 for {set i 0} {$i < $frames} {incr i} {
     set cw [atomselect top "water and oxygen within $dist of $ligand"]
     $cw frame $i
