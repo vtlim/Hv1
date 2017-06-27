@@ -3,10 +3,12 @@
 #SBATCH --job-name="F150A_1504"
 #SBATCH --array=1-40
 #SBATCH --partition=mf_nes2.8
+# SBATCH --depend=after:3120667:3092354
+
+
 #SBATCH --mem=8gb
 #SBATCH --time=72:00:00
 #SBATCH --export=ALL
-
 
 #SBATCH --ntasks-per-node=2
 #SBATCH --ntasks-per-core=2
@@ -20,9 +22,9 @@
 
 #------------SIMULATION SETTINGS -----------#
 #binfile="npt29"
+fepfile="15183_04-F150A.fep"
 pdbfile="15183_04-F150A.pdb"
 psffile="15183_04-F150A.psf"
-fepfile="15183_04-F150A.fep"
 
 fepsource="fep.tcl"
 protpar="par_all36_prot.prm"
@@ -33,7 +35,7 @@ gbipar="gbi_final.str"
 #restrfile="extrabonds.txt"
 
 dLambda="0.025" # 40 Lambda Windows
-temp="300"
+temp="295"
 nMinSteps=1000
 eqSteps=500000  # 1 ns
 nSteps=2500000  # 5 ns
@@ -100,7 +102,7 @@ sed -i '4icoordinates            ../../00_main/'$pdbfile  $fname.inp
 sed -i '5iparaTypeCharmm         on' $fname.inp
 sed -i '6iparameters             /data12/cmf/limvt/toppar/'$lippar  $fname.inp
 sed -i '7iparameters             /data12/cmf/limvt/toppar/'$protpar   $fname.inp
-sed -i '8iparameters             /data12/cmf/limvt/toppar/'$cgfpar   $fname.inp
+sed -i '8iparameters             /data12/cmf/limvt/toppar/cgenff2b6/'$cgfpar   $fname.inp # <=================== check me
 sed -i '9iparameters             /data12/cmf/limvt/toppar/'$watpar   $fname.inp
 sed -i '10iparameters             /data12/cmf/limvt/toppar/'$gbipar   $fname.inp
 sed -i "11iset temp               ${temp}\n"     $fname.inp

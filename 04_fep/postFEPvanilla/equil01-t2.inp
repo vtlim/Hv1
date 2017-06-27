@@ -1,0 +1,84 @@
+
+set outfile            npt01
+structure              taut2_19415-13-c1_e112.psf
+coordinates            taut2_19415-13-c1_e112.pdb
+paraTypeCharmm         on
+parameters             /data12/cmf/limvt/toppar/par_all36_lipid.prm
+parameters             /data12/cmf/limvt/toppar/par_all36_prot.prm
+parameters             /data12/cmf/limvt/toppar/cgenff3.0.1/par_all36_cgenff.prm
+parameters             /data12/cmf/limvt/toppar/toppar_water_ions.jaf2.str
+parameters             /data12/cmf/limvt/toppar/gbi-taut2-chg1.str
+set temp               295
+
+### Input Files
+#firsttimestep
+#bincoordinates		${binfile}.coor
+#binvelocities		${binfile}.vel  ;# remove "temperature" if this is on
+temperature		$temp
+
+### Periodic Boundary Conditions
+#extendedSystem		${binfile}.xsc
+cellBasisVector1    	80.   0.   0.
+cellBasisVector2     	0.    80.  0.
+cellBasisVector3     	0.    0    90.
+cellOrigin 1.9025659561157227 -2.6971206665039063 0.045118991285562515
+
+### Force-Field Parameters
+exclude			    scaled1-4
+1-4scaling		    1.0
+cutoff			    12.0
+switching		    on
+switchdist		    10.0
+pairlistdist		16.0
+vdwForceSwitching	yes
+margin              3.0
+
+### Integrator Parameters
+timestep		    2.0	;# fs/step
+rigidBonds		    all
+nonbondedFreq 		1
+fullElectFrequency	2
+stepspercycle		20
+
+### PME (for full-system periodic electrostatics)
+PME			        on
+PMEInterpOrder		6	;# spline order = 6 in charmm
+PMEGridSpacing      1.0
+
+### Constant Temperature Control
+langevin	    	on
+langevinDamping		1
+langevinTemp		$temp
+
+### Constant Pressure Control
+useGroupPressure        yes     ;# must be used with rigidBonds (shake)
+useFlexibleCell         yes     ;# Allow box to flux (yes-mem  no-prot)
+useConstantRatio        yes     ;# yes-mem, no-prot
+LangevinPiston          on      
+LangevinPistonTarget    1.0     ;# pressure in bar
+LangevinPistonPeriod    200
+LangevinPistonDecay     100
+LangevinPistonTemp      $temp
+
+
+### Output Files
+outputname		${outfile}
+outputEnergies	1000
+outputTiming	1000
+
+restartname 	${outfile}
+restartfreq		1000
+
+DCDfile 		${outfile}.dcd
+DCDfreq			1000
+DCDUnitCell		yes
+
+XSTfile			${outfile}.xst
+XSTfreq			1000
+
+### Electric Field
+eFieldOn		yes
+eField			0. 0. 0.14  ;# depolarizing field vector (kcal/(mol A e))
+
+
+run 5000000 ;# 10ns
