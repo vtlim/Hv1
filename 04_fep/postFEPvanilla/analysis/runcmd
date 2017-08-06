@@ -1,0 +1,3 @@
+vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/rmsd_trajectory.tcl -args ../../00_main/18629-19_R208K.pdb 1 ../taut1_18629-19_k208restr.psf ../npt01-fwd.dcd
+
+vmd -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/viewHbonds.vmd -args ../taut1_18629-19_k208restr.psf ../npt01-fwd.dcd
