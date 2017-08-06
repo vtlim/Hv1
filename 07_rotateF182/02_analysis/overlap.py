@@ -2,9 +2,9 @@
 
 # Purpose: Plot histograms of all umbrella sampling windows altogether; 
 #    they should overlap. Reads in colvars output .traj files from NAMD.
-# Results setup: single directory with all traj files named
-#    a file named `npt01.colvarsXX.traj` where XX is the value of the 
-#    collective variable.
+# Results setup: single directory with all subdirectories for every value
+#    of the collective variable. This script looks for a file named
+#    npt01.colvars.traj in each subdirectory.
 # Note that python script arguments refer to how to process files. For the
 #    min and max values inside the data files, modify np.histogram line in plot.
 
@@ -27,7 +27,7 @@ def overlap(**kwargs):
     data = []
     for i in range(opt['wmin'],opt['wmax'],opt['winc']):
     
-        tfile=os.path.join(hdir,'npt01.colvars'+str(i)+'.traj')
+        tfile=os.path.join(hdir+str(i),'npt01.colvars.traj')
         if not os.path.isfile(tfile):
             print("%s not found." % (tfile))
             continue
