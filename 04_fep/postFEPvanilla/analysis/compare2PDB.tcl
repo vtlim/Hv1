@@ -1,9 +1,12 @@
 
-# Purpose: Compute RMSD of protein between two structures, such as before
-#     and after FEP mutation. Loops through all protein residues from
-#     beg to end.
+# Purpose: Compute RMSD of Hv1 model between two coordinates, such as before
+#     and after FEP mutation. Protein is initially aligned via transmembrane
+#     helices (skipping loops).
 # Usage: 
 #   - vmdt -e file.tcl -args pdb1 pdb2 beg end skip
+#   - beg is start residue number,
+#   - end is end residue number
+#   - skip is single residue number to not include (as in case of mutation)
 #
 # To use as a standalone function with command line:
 #   - open structures in VMD
