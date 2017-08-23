@@ -76,8 +76,8 @@ proc compare2RMSD {molid0 molid1 beg end skipID} {
         if {$resid == $skipID} {
             continue
         }
-        set sel0 [atomselect $molid0 "protein and resid $resid"]
-        set sel1 [atomselect $molid1 "protein and resid $resid"]
+        set sel0 [atomselect $molid0 "protein and resid $resid and noh"]
+        set sel1 [atomselect $molid1 "protein and resid $resid and noh"]
         set irmsd [measure rmsd $sel0 $sel1]
 
         # get resname for printing
