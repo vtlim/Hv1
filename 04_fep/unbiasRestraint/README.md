@@ -17,18 +17,14 @@ Combine energies to add or remove restraint to correct relative free energies ob
 | 9 | yes | [7] LYS, unrestrained | [8] LYS, restrained |
 
 
-WAIT is this valid? The energies to impose restraint on unrestrained simulations makes sense.
-But then the other side of the work is getting energies from the simulations with existing restraints.
-So the distances might already be affected by the bias, so is it really calculating energy to turn off restraints?
-
-"You'd be calculating, say, the free energy for removing the restraints, so you would take your restrained simulation and re-evaluate the energies of that simulation without restraints (or, equivalently, just take the energies of all snapshots and subtract off the energies of the restraints at each snapshot) and the difference between those values would be your forward work. Then you'd take your unrestrained simulation and compute the energy of INTRODUCING restraints at each snapshot, and get the reverse work from that. DLM, 07-28-2017"
+"You'd be calculating, say, the free energy for removing the restraints, so you would take your restrained simulation and re-evaluate the energies of that simulation without restraints (or, equivalently, just take the energies of all snapshots and subtract off the energies of the restraints at each snapshot) and the difference between those values would be your forward work. Then you'd take your unrestrained simulation and compute the energy of INTRODUCING restraints at each snapshot, and get the reverse work from that." -DLM, 07-28-2017
 
 ### Checklist
-Table of index of work, dcd number of frames, colvars traj type, Greenplanet directory, and name of the .traj file.
+Table of index of work, dcd number of frames, colvars traj type, Greenplanet directory, and name of the .traj file.  
 
-X = done
-O = not done
-<< = running
+X = done  
+O = not done  
+<< = running  
 
 | ID | dcd  | traj | dir   | trajFile |
 |----| :-:  | :--: | :---- | :------- |
@@ -42,7 +38,7 @@ O = not done
 |  8 | 2501 | lys  | d7_2c | npt01-fwd.colvars.traj
 | 5b | 5000 | arg  | d2_2b | arg-un.colvars.traj
 | 6b | 2500 | arg  | d2_2a | npt01-restr.colvars.traj
-| 7b | 5001 | lys  | d2_2d | lys-un.colvars.traj <<
+| 7b | 5001 | lys  | d2_2d | lys-un.colvars.traj
 | 8b | 2843 | lys  | d2_2c | npt01-fwd.colvars.traj
 
 ### Greenplanet directories
@@ -104,7 +100,9 @@ taut2
    * Copy over the correct colvars file (lys or arg). Verify atom numbers.
    * Run the trajectory analysis.
 
-3. 
+3. For each trajectory, extract the unaltered energies of each snapshot into a .dat file.
+    * load VMD
+    * `namdplot POTENTIAL vs TS out01.log` and save manually as ASCII matrix
 
 
 
