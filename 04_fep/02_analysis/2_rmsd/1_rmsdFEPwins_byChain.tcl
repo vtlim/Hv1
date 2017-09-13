@@ -146,6 +146,7 @@ foreach way [list "F" "R"] {
 
     # define output file for RMSDs
     set outDataFile [open ${homedir}/02_analysis/2_rmsd/rmsd_avgByWin_byChain-${way}.dat w]
+    puts $outDataFile "# $homedir"
     if {$withGBI == 1 || $withGBI == 2} {
       puts $outDataFile "# Win | helix backbone rmsd | TM helix 1 | TM helix 2 | TM helix 3 | TM helix 4 | 2GBI rmsd (Angstroms)"
     } else {
@@ -171,7 +172,7 @@ foreach way [list "F" "R"] {
 
         # the main functions
         mol new $psf
-        dopbc -file ${dcd} -frames 50:1:249 -mol $molID -ref protein
+        dopbc -file ${dcd} -frames 50:1:249 -mol $molID -ref protein ;# get last frame (assuming 250 total)
         set rmsdlist [rmsdTraj $molID $withGBI]
 
         # write info

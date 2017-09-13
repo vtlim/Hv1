@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Usage: python 2_plotTrajDat.py -f /full/path/with/filename.dat --lig
+# Usage: python 2_plotTrajDat.py -f /full/path/with/filename.dat --lig --chain
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,7 +27,8 @@ def main(**kwargs):
         cols = [1,2] # first and 2nd data columns
         leglabel = ["Hv1 TM backbone", "2GBI"]
     else:
-        way = re.search('.avgByWin\-(.+?).dat',opt['filename']).group(1)
+        way = re.search('.byChain\-(.+?).dat',opt['filename']).group(1)
+        #way = re.search('.avgByWin\-(.+?).dat',opt['filename']).group(1)
         figname = re.search('.rmsd/(.+?).dat',opt['filename']).group(1)
         numCols = 1 # first n *data* (not time) columns
         leglabel = ["TM backbone"]
@@ -41,7 +42,7 @@ def main(**kwargs):
     
     with open(opt['filename']) as f:
         data = f.read()
-    data = data.split('\n')[1:-1] # -1 gets not a blank line at end
+    data = data.split('\n')[2:-1] # -1 skips end blank line; 1st int = # lines in title comment, check me
     
     ### Generate list for x-axis
     x = np.arange(len(data))
@@ -58,7 +59,6 @@ def main(**kwargs):
     except IndexError: pass
     
     y_mat = np.array(y_mat)
-    print y_mat 
     ### Initialize figure.
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
@@ -92,7 +92,8 @@ def main(**kwargs):
     leg = ax1.legend(leglabel,loc=2)
     
     plt.grid()
-    plt.savefig(figname)
+    plt.tight_layout()
+    plt.savefig(figname,bbox_inches='tight')
     plt.show()
 
 # ===========================================
