@@ -14,7 +14,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
-
+import gc
+import datetime
 
 def readNewEdge(attFile, edFile):
 
@@ -74,10 +75,14 @@ def nodeContacts(nodeFile, edgePrefix, frame_a, frame_b, pickleOut):
     
     k = str(int(frame_a) + 1).zfill(len(frame_a)) # increment with leading zeroes
     while k <= frame_b:
-        print(k)
+        if int(k)%50==0: 
+            print(k)
+            print(datetime.datetime.now())
         newEdges = readNewEdge('{}_{}.edgeatt'.format(edgePrefix, k) ,'{}_{}.edges'.format(edgePrefix, k))
         edges = mergeBySum(edges, newEdges) # merge new data into the existing frame
         k = str(int(k) + 1).zfill(len(k)) # increment with leading zeroes
+        del newEdges
+        junk = gc.collect()
     
     edges['average'] = edges['weight']/edges['count']
     #edges.describe()
