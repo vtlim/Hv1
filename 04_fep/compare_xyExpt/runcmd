@@ -1,0 +1,1 @@
+python scatterPlot.py -i xy.in -x '$\Delta G$ expt. (kcal/mol)' -y '$\Delta G$ FEP (kcal/mol)' -t '' -o out.png
