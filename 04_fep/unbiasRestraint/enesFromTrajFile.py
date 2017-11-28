@@ -48,11 +48,11 @@ def readColvFile(infile):
 
     Parameters
     ----------
-    TODO
+    infile: string name of NAMD configuration file for colvars module.
 
     Returns
     -------
-    TODO
+    coldict: dictionary of parameters from colvars input file.
 
     """
 
@@ -64,7 +64,7 @@ def readColvFile(infile):
         m = l.split()
         if len(m) == 2 and m[0].lower() in coldict:
             coldict[m[0].lower()] = float(m[1])
-    print("Collective variable parameters: ",coldict)
+    print("Colvars parameters: ",coldict)
     return coldict
 
 
@@ -92,7 +92,7 @@ def enesFromPositions(trajdata, coldict):
     if coldict['lowerwallconstant'] != coldict['upperwallconstant']:
         print("This script is not yet adapted to use two difference force constants.")
         return
-    k = coldict['lowerwallconstant']
+    k = coldict['lowerwallconstant']/coldict['width']/coldict['width']
 
     mapfx = lambda x: harmonic(k,x,coldict['lowerboundary']) if x < coldict['lowerboundary'] else harmonic(k,x,coldict['upperboundary']) if x > coldict['upperboundary'] else 0
 
