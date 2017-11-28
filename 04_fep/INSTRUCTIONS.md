@@ -1,3 +1,4 @@
+/* vim: set filetype=markdown : */
 
 ## System setup and job submission
 
@@ -19,13 +20,13 @@
             atomtypes ending with B are appearing (1.00 value).
          Hint: it might help to generate a temporary empty line before & after the -1 and 1 lines. 
 
-04. In VMD, view name.fep file. "vmd *fep -e /beegfs/DATA/mobley/limvt/hv1/04_fep/viewMutation.tcl -args NUM GBI1"
+04. In VMD, view name.fep file. `vmd *fep -e /beegfs/DATA/mobley/limvt/hv1/04_fep/viewMutation.tcl -args NUM GBI1`
      (-) NUM is the protein residue number.
      (a) check cell alignment with axes. see code snippets below.
      (b) Red atoms are disappearing and blue atoms are appearing (set color Beta).
      (c) Also view in Licorice "not resname GBI1 and within 3 of resname GBI1".
 
-05. In 00_main file, edit alchemy.inp for periodic cell
+05. In `00_main` file, edit alchemy.inp for periodic cell
      (a) cellBasisVectors can come from pdb of trajectory (not the pdb from psfgen)
      (b) ....  review all lines.
 
@@ -37,12 +38,12 @@
 
 ## Restarting from checkpoint
 
-01. Check that last time step in log file matches xsc and fepout. 
+01. Check that last time step in log file matches xsc. 
     If not, modify stepline variable in checkpoint slurm script.
 
 02. Review checkpoint slurm script. Change array numbers.
 
-03. Submit script INSIDE the FEP_*/ directory containing lambda windows.
+03. Submit script INSIDE the `FEP_*/` directory containing lambda windows.
 
 04. Combining windows
      (-) http://www.ks.uiuc.edu/Research/namd/mailing_list/namd-l.2006-2007/3594.html
@@ -53,16 +54,53 @@
          In lambda dir, make a copy of run1.fepout.
          Trim end lines such that last line in fepout is A, not B.
      (b) Copy all lines of run2.fepout into the copy-run1.fepout file.
-     (c) Verify that lines align with a singly successfully completed run
+     (c) Verify same number of lines as a singly successfully completed run
      (d) Copy and rename as run1.fepout in the RESULTS directory.
 
-## Data analysis
+## File analysis
 
-01. Python script to join windows and apply BAR.
-     (a) mpython FEP_BARanalysis.py -d ../../ -e 1 -t 5 -p -v > a.out
+Getting all the dG files from NAMD output
+  * `grep 'Free energy' *fepout | awk '{print $12}'`
+
+Checking out work in one particular window:
+  * `xb *fepout 2 7`
+  * `xmgrace -block file1.fepout -bxy 2:7 -block file2.fepout -bxy 2:7` 
 
 For comparing output values of different systems / mutations, 
   * find ./ -name 'a.out' -exec grep "Net dG" {} +
+
+
+## Restrained FEP
+
+01. Determine appropriate restraint case to use.
+
+02. Run FEP jobs with restraint.
+
+03. Run restrained AND unrestrained jobs at start and final end points.   
+    Also see: `/beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/README.md`  
+    Subdirectories example:  
+    * `2a_R208-restr`
+    * `2b_R208-unrestr`
+    * `2c_K208-restr`
+    * `2d_K208-unrestr`
+
+    (a) Generate pdb file from last frame of fwd transformation.  
+        `vmdt -e /work/cluster/limvt/analysis/writePDB.tcl -args ../00_main/18629-19_R208K.psf ../FEP_F/lambda_40/alchemy40.dcd 249 taut1_18629-19_R2K.pdb 1 1`  
+    (b) Process PDB file to remove initial residue and rename final residue.
+        `python /work/cluster/limvt/analysis/editFEPpdb.py taut1_18629-19_R2K.pdb taut1_18629-19_R2K_fromPY.pdb R2K LYS`  
+    (c) Generate PSF file and new PDB (with fixed atom numbers).  
+        `vmdt taut1_18629-19_R2K_fromPY.pdb -e mem_setup1.tcl > psfgen.out`  
+    (d) Edit NAMD input file to include RESTRAINT and run.
+    (e) View...
+        - After loading: `source /beegfs/DATA/mobley/limvt/hv1/04_fep/compare_r208k/zhbonds.vmd`  
+        - Or this, but may need to change the vmd script to read in as pdb and not dcd:  
+        `vmd -e /beegfs/DATA/mobley/limvt/hv1/04_fep/1_tautomer/18629-19/d2_R208K-noGBI/r208-general.vmd -args inpsf inpdb 1`  
+
+04. Tcl script to calculate distances related to restraint, whether on or not.
+
+05. Unbias endpoints using restraint definition to calculate restraint energy.
+
+06. Correct for free energies of FEP with restraint energy.
 
 
 ## Miscellaneous
