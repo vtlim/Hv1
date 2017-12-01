@@ -21,6 +21,7 @@ def xyPlot(**kwargs):
     ylabel = opt['ylabel']
     plttitle = opt['title']
     figname = opt['output']
+    guides = opt['guides']
 
     with open(filename) as f:
         data = f.read()
@@ -67,20 +68,20 @@ def xyPlot(**kwargs):
 
 
     ### Color the rainbow.
-    colors = mpl.cm.gist_rainbow(np.linspace(0, 1, numCols)) # from red to purple
+    colors = mpl.cm.gist_rainbow(np.linspace(0, 1, numData)) # from red to purple
     #colors = mpl.cm.rainbow(np.linspace(0, 0.4, len(y_mat))) # from green to purple
     #colors = mpl.cm.rainbow(np.linspace(0, 0.2, len(y_mat))) # from blue to purple
     #colors = mpl.cm.rainbow(np.linspace(0.4, 1, len(y_mat)))
-    markers = ["s","o","8","d","^","x","*","p","v","<","D","+",">","."]
+    markers = ["o","s","8","d","^","x","*","p","v","<","D","+",">","."]
 
     ### Plot the data.
-    # Reference lines
-    x.append(min(x)-0.4)
-    x.append(max(x)+0.4)
-    sortx = np.sort(np.asarray(x))
-    ax1.plot(sortx, sortx, color ='gray', linewidth=0.8,label='_nolegend_')
-    ax1.plot(sortx, sortx+1, ':', color ='gray', linewidth=0.8, label='_nolegend_')
-    ax1.plot(sortx, sortx-1, ':', color ='gray', linewidth=0.8, label='_nolegend_')
+    if guides:
+        x.append(min(x)-0.4)
+        x.append(max(x)+0.4)
+        sortx = np.sort(np.asarray(x))
+        ax1.plot(sortx, sortx, color ='gray', linewidth=0.8,label='_nolegend_')
+        ax1.plot(sortx, sortx+1, ':', color ='gray', linewidth=0.8, label='_nolegend_')
+        ax1.plot(sortx, sortx-1, ':', color ='gray', linewidth=0.8, label='_nolegend_')
 
     # Points with error bars
     for i, (y, s) in enumerate(zip(y_vals, y_stds)):
@@ -96,15 +97,19 @@ def xyPlot(**kwargs):
     # Generate legend.
     l1 = ax1.legend(handles=patches+[mark1,mark2], labels=leglabel+['taut1','taut2'])
     # Save then show figure.
+    plt.grid()
     plt.savefig(figname, bbox_inches='tight')
     plt.show()
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser() 
-    parser.add_argument("-i", "--input", 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input",
                         help="Name of the input file.")
+    parser.add_argument("--guides",action="store_true",
+                        default=False,
+                        help="Plot y=x line and +-1 kcal/mol lines.")
     parser.add_argument("-x", "--xlabel",default="",
                         help="Label for x data.")
     parser.add_argument("-y", "--ylabel",default="",
@@ -113,7 +118,7 @@ if __name__ == "__main__":
                         help="Label for plot title.")
     parser.add_argument("-o", "--output",
                         help="Name of the output figure.")
- 
-    args = parser.parse_args() 
-    opt = vars(args) 
-    xyPlot(**opt) 
+
+    args = parser.parse_args()
+    opt = vars(args)
+    xyPlot(**opt)
