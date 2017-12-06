@@ -1,0 +1,22 @@
+
+=====================================
+Colvars configuration file:     d7_R208K-restr/2c_K208-restr/colvars.tcl
+Colvars data file WITHOUT restraint:    d7_R208K-restr/2d_K208-unrestr/lys-un.colvars.traj
+Colvars data file WITH restraint:   d7_R208K-restr/2c_K208-restr/npt01-fwd.colvars.traj
+
+Colvars parameters:  {'width': 0.1, 'lowerboundary': 3.0, 'upperboundary': 4.0, 'lowerwallconstant': 100.0, 'upperwallconstant': 100.0}
+length of original fwd work: 5001
+length of original rev work: 2503
+
+no_restrt_energies correlation time is 107.496786
+restraint_energies correlation time is 1.947390
+
+Subsampled amounts should be somewhat inversely consistent with correlation times.
+Number of samples (subsampled), fwd work: 47
+Number of samples (subsampled), rev work: 1286
+
+Mean work values before subsampling should be somewhat consistent with colvars restraint data.
+mean for fwd work:  95.7551754775
+mean for rev work: -0.236365 
+
+>>> Free energy, stderr (kcal/mol) to ADD restraints: 0.2369 +- 0.0670

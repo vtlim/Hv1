@@ -5,19 +5,24 @@ import csv
 import numpy as np
 
 ### Written for use of colvars with flat bottom (two half harmonic) potentials
-#   defined via lowerBoundary and lowerWallConstant and upper counterparts.
+#     defined via lowerBoundary and lowerWallConstant and upper counterparts.
 #   To adapt for use by other restraint methods, modify readColvFile dict
-#   and enesFromForces function.
+#     and enesFromForces function.
 ### Be careful if reading in energies from file with non-zero width in
-#   colvars input file.
+#     colvars input file.
+### NOT SUITED FOR HANDLING MULTIPLE COLVARS DEFINITIONS, unless all matching
 
-def readTrajFile(infile):
+def readTrajFile(infile, col):
     """
     Read in colvar trajectory data from .traj file output by NAMD.
+    Index column (0th column) is skipped, and data is read from
+    specified column (zero-based indexes).
 
     Parameters
     ----------
-    TODO
+    infile: str, name of input file to read. 0th column is index
+      such as time step, all other columns are colvars data.
+    col: index of the colvars column to be read.
 
     Returns
     -------
@@ -25,20 +30,8 @@ def readTrajFile(infile):
 
     """
 
-    posList = []
-    forList = []
-
-    with open(infile) as fp:
-        # consider incorporating delimiters? initial tries didn't work
-
-        rdr = csv.reader((row for row in fp if not row.startswith('#')))
-        for row in rdr:
-            posList.append(float(row[0].split()[1]))
-            try:
-                forList.append(float(row[0].split()[2]))
-            except IndexError as err:
-                pass
-    trajData = np.array(list(map(lambda x: np.array(x), [posList, forList])))
+    all_data = np.loadtxt(infile)
+    trajData = all_data.T[col] # skip first index column
     return trajData
 
 
@@ -72,7 +65,7 @@ def readColvFile(infile):
 def enesFromForces(trajdata, coldict):
     """
     Not developed since outputForce is consistent with position via
-    harmonic potential so seems redundant to back calculate 
+    harmonic potential so seems redundant to back calculate
     what I would just put through enesFromPositions anyway.
 
     """
@@ -96,7 +89,7 @@ def enesFromPositions(trajdata, coldict):
 
     mapfx = lambda x: harmonic(k,x,coldict['lowerboundary']) if x < coldict['lowerboundary'] else harmonic(k,x,coldict['upperboundary']) if x > coldict['upperboundary'] else 0
 
-    enes = list(map(mapfx,trajdata[0]))
+    enes = list(map(mapfx,trajdata))
 #    vecfx = np.vectorize(mapfx)  ## returns all zero if the first element fulfills zero condition but works otherwise
 #    print(trajdata[0][0:8])
 #    print(vecfx(trajdata[0][0:8]))
@@ -127,5 +120,5 @@ if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
     print(enes)
-    plt.scatter(range(len(enes)),enes) 
+    plt.scatter(range(len(enes)),enes)
     plt.show()

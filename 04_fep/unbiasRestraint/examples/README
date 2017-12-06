@@ -1,0 +1,1 @@
+python ../biasBAR.py -c colvars.tcl -0 lys-un.colvars.traj -1 npt01-fwd.colvars.traj
