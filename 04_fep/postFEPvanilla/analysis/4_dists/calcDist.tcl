@@ -80,7 +80,7 @@ for {set i 0} {$i < $frames} {incr i} {
 
     if {[info exists distC]} { puts $outDataFile "$i\t$distA\t$distB\t$distC" } \
     elseif {[info exists distB]} { puts $outDataFile "$i\t$distA\t$distB" } \
-    else { puts $outDataFile "$i\t$distA\t$distB\t$distC" }
+    else { puts $outDataFile "$i\t$distA" }
 }
 
 close $outDataFile

@@ -2,7 +2,6 @@
 
 # TODO: save data
 # TODO: update plot to have horizontal lines for guides
-# TODO: update file reader to read multiple (3+) columns
 # TODO: make equil discard time an argument
 # TODO: incorporate equil discard time by not plotting that
 # TODO: make skip values (1000) arg parameters
