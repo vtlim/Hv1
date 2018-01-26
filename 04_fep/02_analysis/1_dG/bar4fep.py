@@ -14,9 +14,6 @@
 ### Documentation for BAR:
 #     https://github.com/choderalab/pymbar/blob/master/pymbar/bar.py
 
-### If ValueError is returned during plot when startStep is specified,
-#     make sure (-e and -t) matches range of (startStep to end).
-#     E.g., `-e 4 -t 5 -s 1999000`
 
 from pymbar import BAR
 from pymbar import timeseries
@@ -81,7 +78,7 @@ def cat_fepout(fep_dir, label, D):
    return outfile
 
 
-def ParseFEP( fep_file, startStep=None ):
+def ParseFEP( fep_file ):
 
     """
     Parse summary *.fepout files and return relevant data as dictionaries.
@@ -90,8 +87,6 @@ def ParseFEP( fep_file, startStep=None ):
     ----------
     fep_file: string. Filename of the summarized results of all
                       *.fepout results in fep_dir.
-    startStep: string of integer. Read fepout files starting from this timestep
-               (follows the FepEnergy: column)
 
     Returns
     -------
@@ -149,9 +144,7 @@ def ParseFEP( fep_file, startStep=None ):
           tempVdw.append(float(l[5])-float(l[4]))
 
        # turn parsing on at section 'STARTING COLLECTION OF ENSEMBLE AVERAGE'
-       if '#STARTING' in l and startStep is None:
-          parsing = True
-       elif startStep==l[1]: 
+       if '#STARTING' in l:
           parsing = True
 
     return dEs_dict, dGs_dict, elecs_dict, vdws_dict, window
@@ -246,7 +239,7 @@ def DoBAR(fwds, revs, label, verbose):
 def hist_plot(w_F, w_R, window_F, window_R, title, outfname):
 
     """
-    Plot probability histogram overlap of all windows. 
+    Plot probability histogram overlap of all windows.
 
     Parameters
     ----------
@@ -369,7 +362,7 @@ def dg_plot(dGs_F, dGs_R, window_F, window_R, eqTime, totTime, title, outfname):
 def gbar_plot(dgs, sds, title, outfname):
 
     """
-    Plot free energy change deltaG over lambda. 
+    Plot free energy change deltaG over lambda.
     Use dG values calculated from BAR.
 
     Parameters
@@ -419,6 +412,7 @@ def pieces_plot(dgs, title, outfname):
     plt.minorticks_on()
     plt.tick_params(axis='both',width=1.5,length=7,labelsize=16)
     plt.tick_params(which='minor',width=1.0,length=4)
+    plt.grid()
     plt.savefig(outfname+'_decomp.eps', format='eps',bbox_inches='tight')
     plt.clf()
 # ------------------------- Script ---------------------------- #
@@ -431,7 +425,7 @@ def main(**kwargs):
         hdir = src+'/FEP_{}/results'.format(D)
         if os.path.exists(hdir) == True:
             fepout = cat_fepout(hdir, 'results', D)
-            (w_D, dGs_D, elecs_D, vdws_D, window_D) = ParseFEP(fepout, args.startStep)
+            (w_D, dGs_D, elecs_D, vdws_D, window_D) = ParseFEP(fepout)
         else:
             raise OSError("No such file or directory '{}'".format(hdir))
         return (w_D, dGs_D, elecs_D, vdws_D, window_D)
@@ -478,8 +472,6 @@ if __name__ == "__main__":
                         help="Generate energy histograms and free energy plots.")
     parser.add_argument("-o", "--outfname", default='plot',
                         help="Base name of saved plots")
-    parser.add_argument("-s", "--startStep", default=None,
-                        help="Read fepout files starting from this timestep.")
     parser.add_argument("-e", "--eqTime",
                         help="For dG window plot: Nanoseconds of equilibration time per window")
     parser.add_argument("-t", "--totTime",
