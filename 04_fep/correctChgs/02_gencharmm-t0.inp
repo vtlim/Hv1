@@ -1,0 +1,77 @@
+!*** This file generates CHARMM .crd/.psf files for the DTT+mem with no water/ions
+* WorkDir: @title
+* Sel: @sel
+* Frame: @i
+
+set indir @indir
+set outdir @title
+
+! Read in CHARMM top/par
+read rtf card name @toppar/top_all36_prot.rtf
+read para card flex name @toppar/par_all36_prot.prm
+read rtf card append name @toppar/top_all36_lipid.rtf
+read para card flex append name @toppar/par_all36_lipid.prm
+stream @toppar/toppar_water_ions.str
+
+! Load preformatted input CRD
+! Get sequence for protein 
+open unit 1 card read name @indir/@i.crd
+read sequ coor segid PROA unit 1
+generate PROA first nter last cter
+
+! Apply patches to keep protonation state consistent
+!patch glup DTT 8
+!patch glup DTT 9
+!patch glup DTT 31
+!patch aspp DTT 34
+
+! Load POPC lipids
+read sequ coor segid MEMB unit 1
+generate POPC first none last none
+
+! Load waters
+read sequ coor segid WAT1 unit 1
+read sequ coor segid WAT2 unit 1
+generate WAT noangle nodihedral
+
+! Load in coordinates
+open read card unit 1 name @indir/@i.crd
+read coor card unit 1
+close unit 1
+
+!Print heavy atoms with unknown coordinates
+coor print sele ( .not. INIT ) .and. ( .not. hydrogen ) end
+
+! preserve initialized hydrogen coordinates
+coor init sele hydr end
+define junk sele hydr .and. init show end
+if ?nsel .gt. 0 then
+    set preserve = yes
+    coor copy comp
+endif
+
+prnlev 0
+hbuild sele hydr end
+prnlev 5
+! preserve initialized hydrogen coordinates
+if preserve .eq. yes coor copy sele hydr .and. init comp show end
+
+! check if there are unknown coordinate
+define XXX sele .not. INIT show end
+if ?nsel .gt. 0 stop ! ABNORMAL TERMINATION: Undefined coordinates
+
+! Set Charges to 0.0 for protein-membrane system
+define lig sele ( segid PROA .and. resid 124 ) end
+define prot sele ( segid PROA ) .and. ( .not. lig ) end
+define mem sele ( segid POPC ) end
+define env sele prot .or. mem end
+
+! Consider charge of reference system only
+if @ref .eq. lig scalar charge set 0.0 sele env .or. segid WAT end 
+if @ref .eq. env scalar charge set 0.0 sele lig end
+
+! Write out CHARMM PSF/CRD
+write coor card unit 20 name @outdir/@i.crd
+write psf card unit 30 name @outdir/@i.psf
+
+STOP
