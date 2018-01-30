@@ -1,0 +1,115 @@
+!*** This file solves the Poisson-Boltzmann Equation
+* WorkDir: @title
+* Sel: @sel
+* Frame: @i
+
+set indir @indir
+set outdir @title
+
+! PBEQ Parameters
+set epsP    =   1     ! dielectric constant for the protein interior
+set epsW    =   @epsw ! solvent dielectric constant (97 for TIP3P)
+set Conc    =   0.15  ! salt concentration (moles/liter)
+set Dcel    =   1     ! the grid spacing in the finite-difference (centered on Xcen,Ycen,Zcen)
+set LEdge   =   10    ! distance between a protein atom and a grid
+                      ! LEdge*2 for coarse-grid calculations and LEdge/2 for fine-grid calculations (see below)
+! Membrane Parameters
+set tmemb   =   35    ! thickness of membrane (along Z)
+set zmemb   =   0.0   ! center of membrane (along Z)
+set vmemb   =   0.150 ! potential difference across membrane (volts)
+set epsM    =   1.0   ! membrane dielectric constant
+set htmemb  =   0     ! thickness of headgroup region
+set epsH    =   1.0   ! membrane headgroup dielectric constant
+
+! System size parameters
+set xmax = @X
+set ymax = @Y
+set zmax = @Z
+set xmin = -@X
+set ymin = -@Y
+set zmin = -@Z
+
+! Internal box Parameters
+set lxmax   =   @IX
+set lymax   =   @IY
+set lzmax   =   @IZ
+set lxmin   =   -@IX
+set lymin   =   -@IY
+set lzmin   =   -@IZ
+set epsB    =   1.0   ! dielectric constant inside box
+set kappa2  =   0.0   ! Debye-Huckel factor
+
+! Read in CHARMM top/par
+read rtf card name @toppar/top_all36_prot.rtf
+read para card flex name @toppar/par_all36_prot.prm
+read rtf card append name @toppar/top_all36_lipid.rtf
+read para card flex append name @toppar/par_all36_lipid.prm
+stream @toppar/toppar_water_ions.str
+
+! =========== GBI TAUT 2 =========== !
+read rtf card append name @toppar/cgenff3.0.1/top_all36_cgenff.rtf
+read para card flex append name @toppar/cgenff3.0.1/par_all36_cgenff.prm
+stream @toppar/gbi-taut2-chg1.str
+
+! Read CHARMM input PSF/CRD
+read psf card name @indir/@i.psf
+read coor card name @indir/@i.crd
+
+! Get system net charge
+calc cgtot = int ( ?cgtot )
+
+! Grid information
+calc Xcen = ( @xmax + @xmin ) / 2.0
+calc Ycen = ( @ymax + @ymin ) / 2.0
+calc Zcen = ( @zmax + @zmin ) / 2.0
+
+calc Nclx = int ( ( @LEdge / 2.0 + @Xmax - @Xmin ) / @Dcel )
+calc Ncly = int ( ( @LEdge / 2.0 + @Ymax - @Ymin ) / @Dcel )
+calc Nclz = int ( ( @LEdge / 2.0 + @Zmax - @Zmin ) / @Dcel )
+
+
+! a set of PB radii
+prnlev 0
+stream @toppar/pbeq/radii.str
+
+prnlev 5
+scalar wmain statistics select .not. type H* end
+define check select (.not. type H* ) .and. (.not. segid POP*) .and. ( property wmain .eq. 0.0 ) show end
+if ?nsel ne 0  stop       !some heavy atom have a zero radius
+
+PBEQ
+
+scalar wmain = radius
+
+! Charge distribution
+SOLVE Nclx @nclx Ncly @ncly Nclz @nclz -
+      Dcel @Dcel Conc @conc -
+      EpsP @epsP EpsW @epsW EPSB @epsB  -
+      XBcen @Xcen YBcen @Ycen ZBcen @Zcen -
+      TMEMB @tmemb VMEMB @vmemb ZMEMB @zmemb -
+      EPSM @epsM HTMEMB @htmemb epsH @epsH -
+      LXMAX @lxmax LXMIN @lxmin -
+      LYMAX @lymax LYMIN @lymin -
+      LZMAX @lzmax LZMIN @lzmin -
+      NPBC BKAP REEN WATR 1.4
+
+! Get electrostatic PB free energy
+! ?enpb = (1/2)*Sum Q_i PHI_i over the lattice.
+set chgdis = ?enpb
+
+! Write PHI at each gridpoint
+open write form unit 20 name @outdir/@i.phi
+write PHI card xfirst @xmin xlast @xmax yfirst @ymin ylast @ymax zfirst @zmin zlast @zmax unit 20
+close unit 20
+
+! Compute average potential over grid
+PBAV PHI xfirst @xmin xlast @xmax yfirst @ymin ylast @ymax zfirst @zmin zlast @zmax
+open write unit 30 card name @outdir/@i.avg
+write title unit 30
+*NET CHG = @cgtot
+*AVGPHI = ?AVPH
+*PHI = @chgdis
+close unit 30
+
+END
+STOP

@@ -1,0 +1,32 @@
+* Dummy atom
+* WorkDir: @title
+set outdir @title
+
+read rtf card name @toppar/top_all36_cgenff.rtf
+read para card flex name @toppar/par_all36_cgenff.prm
+
+
+read psf card name @toppar/pbeq/dum.psf
+read coor card name @toppar/pbeq/dum.crd
+read sequ dum 1
+
+
+coor set XCEN 0.0 YCEN 0.0 ZCEN 0.0 sele segid DUM end
+coor print sele segid DUM end
+
+scalar charge set @netchg sele ( segid DUM ) end
+
+calc XL = int ( @X * 2.0 )
+calc YL = int ( @Y * 2.0 )
+calc ZL = int ( @Z * 2.0 )
+
+crystal define orthorhombic @XL @YL @ZL 90.0 90.0 90.0
+crystal build noper 0
+coor copy comp
+
+! Write out CHARMM PSF/CRD
+write coor card name @outdir/@i_chgd.crd
+write psf card name @outdir/@i_chgd.psf
+
+
+STOP

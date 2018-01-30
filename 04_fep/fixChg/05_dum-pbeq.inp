@@ -1,0 +1,98 @@
+!*** This file solves the Poisson-Boltzmann Equation
+* WorkDir: @title
+
+set outdir @title
+
+! PBEQ Parameters
+set EpsR    =   1     ! dielectric constant for the reference environment
+set EpsP    =   1     ! dielectric constant for the protein interior
+set EpsW    =   @epsw ! solvent dielectric constant (97 for TIP3P)
+set Conc    =   0.15  ! salt concentration
+set Dcel    =   1     ! the grid spacing in the finite-difference (centered on Xcen,Ycen,Zcen)
+set LEdge   =   10    ! distance between a protein atom and a grid
+                      ! LEdge*2 for coarse-gird calculations and LEdge/2 for fine-grid calculations (see below)
+set Options =  watr 1.4 reentrant ! Let's use the molecular surface
+
+! System size parameters
+set xmax = @X
+set ymax = @Y
+set zmax = @Z
+set xmin = -@X
+set ymin = -@Y
+set zmin = -@Z
+
+! Internal box Parameters
+set lxmax   =   @IX
+set lymax   =   @IY
+set lzmax   =   @IZ
+set lxmin   =   -@IX
+set lymin   =   -@IY
+set lzmin   =   -@IZ
+set epsb    =   1.0   ! dielectric constant inside box
+set kappa2  =   0.0   ! Debye-Huckel factor
+
+! Read in CHARMM top/par
+read rtf card name @toppar/top_all36_cgenff.rtf
+read para card flex name @toppar/par_all36_cgenff.prm
+
+! Read CHARMM input PSF/CRD
+read psf card name @dumdir/@i_chgd.psf
+read coor card name @dumdir/@i_chgd.crd
+
+calc cgtot = int( ?cgtot )
+
+! Grid information
+calc Xcen = ( @xmax + @xmin ) / 2.0
+calc Ycen = ( @ymax + @ymin ) / 2.0
+calc Zcen = ( @zmax + @zmin ) / 2.0
+
+calc Nclx = int ( ( @LEdge / 2.0 + @Xmax - @Xmin ) / @Dcel )
+calc Ncly = int ( ( @LEdge / 2.0 + @Ymax - @Ymin ) / @Dcel )
+calc Nclz = int ( ( @LEdge / 2.0 + @Zmax - @Zmin ) / @Dcel )
+
+
+! a set of PB radii
+prnlevel 0
+stream @toppar/pbeq/radii.str
+
+prnlevel 5
+scalar wmain statistics select .not. type H* end
+
+PBEQ
+
+scalar wmain = radius
+
+! Charge distribution
+SOLVE Nclx @nclx Ncly @ncly Nclz @nclz -
+      Dcel @Dcel Conc @conc -
+      EpsP @epsP EpsW @EpsW EPSB @epsb  -
+      XBcen @Xcen YBcen @Ycen ZBcen @Zcen -
+      LXMAX @lxmax LXMIN @lxmin -
+      LYMAX @lymax LYMIN @lymin -
+      LZMAX @lzmax LZMIN @lzmin -
+      NPBC BKAP @Options
+
+! Get electrostatic PB free energy
+! ?enpb = (1/2)*Sum Q_i PHI_i over the lattice.
+set ptchg = ?enpb
+
+! Compute average potential over grid
+PBAV PHI xfirst @xmin xlast @xmax yfirst @ymin ylast @ymax zfirst @zmin zlast @zmax
+open write unit 30 card name @dumdir/@i.avg
+write title unit 30
+*NET CHG = @cgtot
+*AVGPHI = ?AVPH
+*PHI = @ptchg
+close unit 30
+
+
+! Calculate residual integrated potential (Eqn 18)
+calc Energy = ( @chgdis - @ptchg )
+open write unit 80 card name @outdir/@i.res
+write title unit 80
+*RIP = @Energy
+close unit 80
+
+
+END
+STOP
