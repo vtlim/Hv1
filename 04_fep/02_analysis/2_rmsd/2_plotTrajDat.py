@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Usage: python 2_plotTrajDat.py -f /full/path/with/filename.dat --lig --chain
+# Usage: python 2_plotTrajDat.py -f /full/path/with/filename.dat --lig
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -42,7 +42,7 @@ def main(**kwargs):
     
     with open(opt['filename']) as f:
         data = f.read()
-    data = data.split('\n')[2:-1] # -1 skips end blank line; 1st int = # lines in title comment, check me
+    data = data.split('\n')[1:-1] # -1 gets not a blank line at end
     
     ### Generate list for x-axis
     x = np.arange(len(data))
@@ -59,6 +59,7 @@ def main(**kwargs):
     except IndexError: pass
     
     y_mat = np.array(y_mat)
+    print y_mat 
     ### Initialize figure.
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
@@ -92,8 +93,7 @@ def main(**kwargs):
     leg = ax1.legend(leglabel,loc=2)
     
     plt.grid()
-    plt.tight_layout()
-    plt.savefig(figname,bbox_inches='tight')
+    plt.savefig(figname)
     plt.show()
 
 # ===========================================

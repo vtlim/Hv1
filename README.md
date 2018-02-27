@@ -1,5 +1,2 @@
 # Hv1
-Free energy perturbation calculations for Hv1 protein
-
-## To Do
-- update this README file
+Scripts related to relative binding free energy calculations for Hv1 protein.

@@ -18,11 +18,12 @@ set inpsf [lindex $argv 0]
 set inpdb [lindex $argv 1]
 
 # why do i have to subtract one? it worked before without it fine..
-for {set i 2} {$i < [expr $argc -1]} {incr i} {
+#for {set i 2} {$i < [expr $argc -1]} {incr i}
+for {set i 2} {$i < $argc} {incr i} {
     lappend dcdlist [lindex $argv $i]
 }
 
-set dumid 58260 ; # "borrow" some lone ion to use as dummy atom
+set dumid 58230 ; # "borrow" some lone ion to use as dummy atom
 
 
 # =============================================================== #
@@ -59,7 +60,6 @@ for {set resid 88} {$resid < 231} {incr resid} {
         $dummy set z [lindex $xyz 2]
     }
 
-    puts "$resid [$dummy get {x y z}]"
     # rmsf calculation 
     set rmsf [measure rmsf $dummy] 
     $whole set occupancy $rmsf
