@@ -1,24 +1,37 @@
 
+# Objective
 
-Version: Oct 14 2017
+See how Hv1/2GBI behave after alchemical transformation.
+
+Version: Mar 10 2018
 Source:  `/beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/README.md` 
 
-## Objective
-
-See how Hv1 / 2GBI behave after alchemical transformation.
+----------------------------------------------------------------------------------------------------------------
 
 ## Instructions for generating post-FEP vanilla trajectory
 
-1. Generate pdb file from last frame of fwd transformation.
-    * `vmdt -e /work/cluster/limvt/analysis/writePDB.tcl -args /beegfs/DATA/mobley/limvt/hv1/04_fep/1_tautomer/18629-19/b1_V178A/00_main/18629-19_V178A.psf /beegfs/DATA/mobley/limvt/hv1/04_fep/1_tautomer/18629-19/b1_V178A/FEP_F/lambda_40/alchemy40.dcd 249 taut1_18629-19_V2A.pdb 1 1`
- 
-2. Process PDB file to remove initial residue and rename final residue.
-    * `python /work/cluster/limvt/analysis/editFEPpdb.py taut1_18629-19_V2A.pdb taut1_18629-19_V2A_fromPY.pdb V2A ALA`
- 
-3. Generate PSF file and new PDB (with fixed atom numbers).
-    * `vmdt taut1_18629-19_V2A_fromPY.pdb -e mem_setup.tcl > psfgen.out`
- 
+EVERYTHING BELOW HAS BEEN INCORPORATED INTO THE BASH SCRIPT `fep2Vanilla.sh`
+MODIFY PARAMETERS THERE AND RUN.
+
+0. Make directory, copy over NAMD input file, copy over PSF generation script. Edit the Tcl script for your file.
+
+1. Generate pdb file from last frame of fwd transformation.`
+vmdt -e /work/cluster/limvt/analysis/writePDB.tcl -args ../00_main/18629-19_V178A.psf ../FEP_F/lambda_40/alchemy40.dcd 249 taut1_18629-19_V2A.pdb 1 1
+`
+2. Process PDB file to remove initial residue and rename final residue.`
+python /work/cluster/limvt/analysis/editFEPpdb.py taut1_18629-19_V2A.pdb taut1_18629-19_V2A_fromPY.pdb V2A ALA
+`
+3. Generate PSF file and new PDB (with fixed atom numbers).`
+vmdt taut1_18629-19_V2A_fromPY.pdb -e mem_setup.tcl > psfgen.out
+`
 4. Edit NAMD input file and run.
+    * structure
+    * coordinates
+    * cellOrigin
+    * [viewSystem] and check box size
+    * number of run steps
+
+----------------------------------------------------------------------------------------------------------------
 
 ## Analyses
 Do not copy over scripts except for the two Tcl scripts in nonCovInts directory. 
@@ -84,7 +97,7 @@ Instructions, with examples:
     * output file name
     * start frame number of output
 
-4. Process node edge results using `/beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/3_nonCovInts/nodeContacts.py`.
+4. Submit a slurm job to process node edge results using `/beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/3_nonCovInts/nodeContacts.py`.
    ```
    #python /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/3_nonCovInts/nodeContacts.py -n taut1_npt0910/hHv1_open_wGBI.psf.nodes -e taut1_npt0910/t1-18629-19-npt0910 -a 001 -b 500 -o taut1_npt0910/t1ref.pickle &
    ```
