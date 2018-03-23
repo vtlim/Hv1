@@ -21,6 +21,7 @@
 
 set homedir [lindex $argv 0]
 set withGBI [lindex $argv 1]
+set pdb [lindex $argv 2]
 
 
 # Text processing
@@ -34,7 +35,6 @@ set num_wins 40   ;# number of windows for each of fwd and rev
 
 # Find input psf, original coordinates.
 set psf [glob -dir ${homedir}/00_main *psf]
-set pdb [glob -dir ${homedir}/00_main *pdb]
 
 
 # ================= User-defined functions ===================== #
@@ -133,8 +133,8 @@ package require tempoUserVMD
 mol addfile $pdb waitfor all
 set molID 1  ;# the reference pdb will be molID 0
 
-#foreach way [list "F" "R"]
-foreach way [list "R" ] {
+foreach way [list "F" "R"] {
+#foreach way [list "R" ]
 
     # define output file for RMSDs
     set outDataFile [open rmsd_avgByWin_byChain-${way}.dat w]

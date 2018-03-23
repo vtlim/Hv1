@@ -1,5 +1,5 @@
 
-# Purpose: 
+# Purpose: Open all lambda windows in FEP simulation for viewing/analyzing.
 
 # Usage: vmd -e file.tcl -args homedir withGBI
 #   - homedir: full path ending with pose and mutation, e.g. /path/to/19415-10/a1_F150A
@@ -48,7 +48,7 @@ mol addfile $pdb waitfor all
 mol new $psf
 set molID 1
 
-foreach way [list "R"] {
+foreach way [list "F"] {
 
 
     # get list of trajectories, add zero for nums<10
@@ -63,7 +63,7 @@ foreach way [list "R"] {
     }
 
     foreach dcd $dcdlist {
-        dopbc -file ${dcd} -frames 0:1:249 -mol $molID -ref protein ;# get last frame (assuming 250 total)
+        dopbc -file ${dcd} -frames 0:10:249 -mol $molID -ref protein ;# get last frame (assuming 250 total)
     }
 
 

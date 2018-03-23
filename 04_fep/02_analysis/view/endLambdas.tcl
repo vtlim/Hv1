@@ -25,15 +25,22 @@ set psf [glob -dir ${homedir}/00_main *psf]
 set pdb [glob -dir ${homedir}/00_main *pdb]
 set fo [open "${homedir}/02_analysis/2_rmsd/README" "a"] 
 
+
+
 # Archived.
 #set skip 1
 
 
+
+# =============================================================== #
+# ============= Grab frame from all windows ===================== #
 # =============================================================== #
 
 lappend auto_path /data12/cmf/limvt/tempotools/libs
 lappend auto_path /home/limvt/Documents/tempotools/libs
+
 package require tempoUserVMD
+set count 0
 
 # load in psf and reference coords
 mol new $psf
@@ -60,12 +67,11 @@ set ends [list 50 249 249 50]
 # loop over specified lambda windows
 foreach dcd $dcdlist sf $starts ef $ends {
     dopbc -file ${dcd} -frames $sf:1:$ef -ref protein ;# get last frame (assuming 250 total)
+
 }
-
     
-# Write out summary trajectory
+# Write out summary trajectory - optional, for later viewing purposes
 animate write dcd $outtraj waitfor all
-
 
 # Record details of summary trajectory in README 
 puts $fo "\n\nDetails for summary trajectory:"
@@ -74,7 +80,7 @@ puts $fo " - Date:\t[clock format [clock seconds]]"
 #puts $fo " - Skip:\t$skip"
 puts $fo " - System:\t$pose/$mut"
 puts $fo " - PSF:\t\t$psf"
-close $fo
 
+close $fo
 exit
  

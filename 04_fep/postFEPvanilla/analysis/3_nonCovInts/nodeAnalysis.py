@@ -4,6 +4,7 @@ Analysis functions for nodeAnalysis.ipynb.
 Victoria T. Lim
 """
 
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -330,7 +331,7 @@ def diffEdges(nodes_x,nodes_y,edges_x,edges_y):
     between different systems, such as before and after mutation.
 
     USE CASES:
-       [1] taut1 and taut2 with same protein system but differs in 2GBI and maybe in waters
+       [1] taut1 and taut2 with SAME protein system but differs in 2GBI and maybe in waters
        [2] tautx before and after mutation, all else the same (same 2GBI and waters)
 
     """
@@ -364,10 +365,13 @@ def diffEdges(nodes_x,nodes_y,edges_x,edges_y):
     mut2_start = nodes_in_df2_not_in_df1[0]
     if not mut1_start == mut2_start:
         print("ERROR: start node value of mutation(?) do not match between nodes_x and nodes_y")
-        exit()
+        sys.exit()
     mut1_end = nodes_in_df1_not_in_df2[-1]
     mut2_end = nodes_in_df2_not_in_df1[-1]
-    offset = mut1_end - mut2_end # this is not valid if there are 2 sets of changes (e.g., mutation && taut)
+    offset = mut1_end - mut2_end # NOT valid if there are 2 sets of changes (e.g., mutation && taut)
+    if np.absolute(offset) > 10:
+        print("ERROR: nodes are offset by {}. Check use cases, tail of nodes, and nodes in one but not the other.".format(offset))
+        sys.exit()
     mask_i = (noMut_edges_x['node_i'] > mut2_end)
     mask_j = (noMut_edges_x['node_j'] > mut2_end)
     to_change_i = noMut_edges_x[mask_i]

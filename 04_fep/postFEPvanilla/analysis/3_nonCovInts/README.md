@@ -2,7 +2,7 @@
 # Quantify contacts within protein-ligand system
 Loosely based on node definitions by [Benson and Daggett](https://dx.doi.org/10.1142%2FS0219720012500084).
 Tcl scripts written by Eric Wong and Alfredo Freites.
-Documentation last updated: *2018 Feb 21*.
+Documentation last updated: *Mar 23 2018*.
 
 ## Script sources
 Copy original from HPC: `crsync sshhpc:/pub/limvt/hv1/02_configs/02_analysis/07_nodeContacts/*tcl /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/3_nonCovInts/`
@@ -25,6 +25,8 @@ Copy template for here: `crsync /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvani
     * *`mkdir -p analysis/1_rmsd analysis/2_ligClose analysis/3_nonCovInts`*
     * Copy the .tcl scripts and this procedure README to the nonCovInts directory
       (don't make a typo and forget the destination directory else you overwrite the node script!)
+
+0. Request an interactive job (not the qrsh-mc19).
 
 1. Acquire node network file with `getNodes.v5.tcl`. Use with *`vmdt -e getNodes.v5.tcl`*
     * Variables to change before using: [1] input/output directories, [2] PSF filename, [3] ligand residue
@@ -49,6 +51,7 @@ Copy template for here: `crsync /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvani
     7. start frame number of output
 
 4. Process node edge results using `/beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/3_nonCovInts/nodeContacts.py`.
+    * Do this as a slurm job bc intensive (time and memory).
     * Example: *`python nodeContacts.py -n hHv1_open_wGBI.psf.nodes -e t1-18629-19-npt0910 -a 001 -b 500 -o t1ref.pickle &`*
     * Python documentation:
 ```

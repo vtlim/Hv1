@@ -23,7 +23,7 @@ for {set i 2} {$i < $argc} {incr i} {
     lappend dcdlist [lindex $argv $i]
 }
 
-set dumid 58230 ; # "borrow" some lone ion to use as dummy atom
+set dumid 58230 ; # borrow some lone ion to use as dummy atom
 
 
 # =============================================================== #
@@ -46,21 +46,31 @@ for {set resid 88} {$resid < 231} {incr resid} {
     set whole [atomselect top "protein and resid $resid"]
     set group [atomselect top "protein and resid $resid and noh"]
     set dummy [atomselect top "index $dumid"]
+    set refprot [atomselect 0 "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}" frame 0]
+    set compprot [atomselect 0 "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}"]
 
     
     set num_steps [molinfo top get numframes]
     for {set frame 0} {$frame < $num_steps} {incr frame} {
+
+        # update selections to this frame
+        $whole frame $frame
         $group frame $frame
         $dummy frame $frame
-        # $dummy set {x y z} [measure center $group] ; # doesn't work?
-        #set xyz [measure center $group weight mass]
+        $refprot frame $frame
+        $compprot frame $frame
+
+        # align protein by (1) transmembrane regions, (2) backbone
+        $compprot move [measure fit $compprot $refprot]
+
+        # measure crds of center of this noh-residue and set crds on dummy atom
         set xyz [measure center $group]
         $dummy set x [lindex $xyz 0]
         $dummy set y [lindex $xyz 1]
         $dummy set z [lindex $xyz 2]
     }
 
-    # rmsf calculation 
+    # rmsf calculation over all frames
     set rmsf [measure rmsf $dummy] 
     $whole set occupancy $rmsf
     puts $outDataFile "$resid\t$rmsf"
