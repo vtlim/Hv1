@@ -1,21 +1,22 @@
 
-# Purpose: Count number of waters within x Angstrom of ligand.
+# Purpose: Count number of waters within x Angstrom of specified selection.
 
-# Usage: vmdt -e file.tcl -args inpsf indcd withGBI
-#   - withGBI: GBI0 noGBI, GBI1 taut1, GBI2 taut2
+# Usage: vmdt -e file.tcl -args inpsf indcd selection
 #
 # Modified from: http://www.ks.uiuc.edu/Research/vmd/mailing_list/vmd-l/23723.html
-#
+# Specify selection with no spaces, but use commas for multiple words: protein,and,resid,211
 
 
 # ========================== Variables ========================= #
 
 set inpsf [lindex $argv 0]
 set indcd [lindex $argv 1]
-set withGBI [lindex $argv 2]
+set prelig [lindex $argv 2]
 
 set dist 4
 set watlist [list]
+set lig [split $prelig {,}]
+
 # =============================================================== #
 
 proc average L {
@@ -32,7 +33,7 @@ package require pbctools
 
 # define output file
 set outDataFile [open waters-within-${dist}.dat w]
-puts $outDataFile "# Frame | number of waters (noh) within $dist Angstrom of 2GBI (noh)"
+puts $outDataFile "# Frame | number of waters (noh) within $dist Angstroms of $lig (noh)"
 
 # load files
 mol new $inpsf
@@ -40,14 +41,7 @@ mol addfile $indcd type {dcd} first 0 last -1 step 10 waitfor -1
 #mol addfile $indcd type {dcd} first 0 last 100 step 1 waitfor -1
 
 # specify ligand
-if {$withGBI == "GBI1"} {
-    set ligand "resname GBI1 and noh"
-} elseif {$withGBI == "GBI2"} {
-    set ligand "resname GBI2 and noh"
-} else {
-    puts "Specify a valid version of 2GBI ligand."
-    exit
-}
+set ligand "$lig and noh"
 pbc wrap -compound fragment -center com -centersel "$ligand" -all 
 
 # loop over frames
