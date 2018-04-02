@@ -10,6 +10,7 @@
  
 
 proc draw_box {boxcen halfx halfy halfz} {
+    # "draw_box com 30 30 30" will draw a box with center at system's center-of-mass and side lengths 60 60 60
 
     if {$boxcen=="origin" || $boxcen=="orig"} {
         set cenx 0.0
@@ -52,3 +53,33 @@ proc draw_box {boxcen halfx halfy halfz} {
     draw line "$maxx $maxy $maxz" "$minx $maxy $maxz"
     draw line "$maxx $maxy $maxz" "$maxx $miny $maxz"
 }
+
+proc draw_plane {halflength dimension dimvalue style} {
+    # "draw_plane_line 40 z -45 line" will draw a square outline with side length 80 (2x40) at z=-45
+    if {$dimension=="z"} {
+        set minx [expr 0.0 - $halflength]
+        set maxx [expr 0.0 + $halflength]
+
+        set miny [expr 0.0 - $halflength]
+        set maxy [expr 0.0 + $halflength]
+
+        set allz $dimvalue
+
+        if {$style=="line"} {
+            puts "Drawing a plane outline at z=$dimvalue"
+            draw color yellow
+            draw line "$minx $miny $allz" "$maxx $miny $allz"
+            draw line "$minx $miny $allz" "$minx $maxy $allz"
+        
+            draw line "$maxx $miny $allz" "$maxx $maxy $allz"
+            draw line "$minx $maxy $allz" "$maxx $maxy $allz"
+
+        } elseif {$style=="plane"} {
+            puts "Drawing a plane filled at z=$dimvalue"
+            draw color yellow
+            draw triangle "$minx $miny $allz" "$minx $maxy $allz" "$maxx $maxy $allz"
+            draw triangle "$maxx $maxy $allz" "$maxx $miny $allz" "$minx $miny $allz"
+        }
+    }
+}
+
