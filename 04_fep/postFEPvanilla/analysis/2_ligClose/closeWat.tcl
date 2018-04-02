@@ -2,7 +2,7 @@
 # Purpose: Count number of waters within x Angstrom of ligand.
 
 # Usage: vmdt -e file.tcl -args inpsf indcd withGBI
-#   - withGBI: 0 noGBI, 1 taut1, 2 taut2
+#   - withGBI: GBI0 noGBI, GBI1 taut1, GBI2 taut2
 #
 # Modified from: http://www.ks.uiuc.edu/Research/vmd/mailing_list/vmd-l/23723.html
 #
@@ -25,6 +25,7 @@ proc average L {
 lappend auto_path /data12/cmf/limvt/tempotools/libs
 lappend auto_path /home/limvt/Documents/tempotools/libs
 package require tempoUserVMD
+package require pbctools
 
 # =============================================================== #
 
@@ -35,31 +36,32 @@ puts $outDataFile "# Frame | number of waters (noh) within $dist Angstrom of 2GB
 
 # load files
 mol new $inpsf
-mol addfile $indcd type {dcd} first 0 last -1 step 1 waitfor -1
+mol addfile $indcd type {dcd} first 0 last -1 step 10 waitfor -1
 #mol addfile $indcd type {dcd} first 0 last 100 step 1 waitfor -1
 
 # specify ligand
-if {$withGBI == 1} {
+if {$withGBI == "GBI1"} {
     set ligand "resname GBI1 and noh"
-} elseif {$withGBI == 2} {
+} elseif {$withGBI == "GBI2"} {
     set ligand "resname GBI2 and noh"
 } else {
     puts "Specify a valid version of 2GBI ligand."
     exit
 }
+pbc wrap -compound fragment -center com -centersel "$ligand" -all 
 
 # loop over frames
 set frames [molinfo top get numframes]
+set cw [atomselect top "water and oxygen within $dist of $ligand"]
 for {set i 0} {$i < $frames} {incr i} {
-    set cw [atomselect top "water and oxygen within $dist of $ligand"]
     $cw frame $i
     $cw update
     set num [$cw num]
     lappend watlist $num
     puts $outDataFile "$i $num"
-    $cw delete
 }
 
+$cw delete
 puts $outDataFile "# --- Average over traj: [average $watlist]"
 close $outDataFile
 
