@@ -4,9 +4,6 @@
 #   of the amino acid (with backbone, no hydrogens).
 
 # Usage: vmd -dispdev none -e file.tcl -args inpsf inpdb indcd [indcd2 indcd3 ...]
-#  - inpsf TODO
-#  - inpdb
-#  - indcd
 #
 # References:
 #  - rmsf uses average position of frames as reference, https://tinyurl.com/yawa8xjo
@@ -33,7 +30,7 @@ set dumid 58230 ; # borrow some lone ion to use as dummy atom
 mol new $inpsf
 mol addfile $inpdb
 foreach dcd $dcdlist {
-    mol addfile $dcd waitfor all
+    mol addfile $dcd first 0 last -1 step 1 waitfor all
 }
 
 # open file for writing output
@@ -83,10 +80,3 @@ animate write psf rmsf_hv1.psf beg 0 end 0 sel [atomselect top protein]
 close $outDataFile
 exit
  
-
-# ===== if you want to write out rmsf by frame =====
-# this would go in for loop of frames
-#set outfile [open "rmsfCA.txt" w] 
-#foreach x $rmsf { 
-#  puts $outfile $x 
-#} 
