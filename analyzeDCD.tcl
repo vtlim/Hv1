@@ -38,14 +38,15 @@ proc align_backbone {} {
     # Align Hv1 protein by backbone of transmembrane regions.
     #   Used in other functions.
     # ============================================================
+    set all [atomselect 0 "all"]
     set refprot [atomselect 0 "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}" frame 0]
     set compprot [atomselect 0 "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}"]
     
     set num_steps [molinfo top get numframes]
     for {set frame 0} {$frame < $num_steps} {incr frame} {
-        $refprot frame $frame
         $compprot frame $frame
-        $compprot move [measure fit $compprot $refprot]
+        $all frame $frame
+        $all move [measure fit $compprot $refprot]
     }
 }
 
@@ -198,7 +199,7 @@ proc count_wat_z {outfile pre_z0 pre_z1} {
 
 # read in data
 mol new $inpsf
-mol addfile $inpdb
+mol addfile $inpdb        ;# mol 0 == mol top
 foreach dcd $dcdlist {
     mol addfile $dcd first 0 last -1 step $inskip waitfor all
 }
