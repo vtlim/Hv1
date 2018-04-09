@@ -38,7 +38,7 @@ def numericalSort(value):
    return parts
 
 
-def cat_fepout(fep_dir, label, D):
+def cat_fepout(fep_dir, outfile):
 
    """
    For a directory containing all lambda windows of forward or
@@ -59,13 +59,6 @@ def cat_fepout(fep_dir, label, D):
    """
    # get list of all *.fepout file in this fep_dir
    fep_file = sorted(glob.glob(fep_dir+'/*.fepout'), key=numericalSort)
-   #outfile = fep_dir.split('/')[-1]+'_{}.fepout'.format(D)
-   outfile =  '{}_{}.fepout'.format(label, D)
-
-   # don't write file if already exists
-   if os.path.exists(outfile):
-      print("!!! WARNING: {} already exists".format(outfile))
-      return outfile
 
    # loop through all *.fepout files and write to the summary file
    with open(outfile, 'w') as output:
@@ -423,8 +416,12 @@ def main(**kwargs):
         ### Read output data files and summarize results.
         src = args.hdir.rstrip('//')
         hdir = src+'/FEP_{}/results'.format(D)
-        if os.path.exists(hdir) == True:
-            fepout = cat_fepout(hdir, 'results', D)
+        outfile =  '{}_{}.fepout'.format('results', D)
+        if os.path.exists(outfile):
+            print("!!! WARNING: {} already exists".format(outfile))
+            (w_D, dGs_D, elecs_D, vdws_D, window_D) = ParseFEP(outfile)
+        elif os.path.exists(hdir) == True:
+            fepout = cat_fepout(hdir, outfile)
             (w_D, dGs_D, elecs_D, vdws_D, window_D) = ParseFEP(fepout)
         else:
             raise OSError("No such file or directory '{}'".format(hdir))
