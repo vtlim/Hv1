@@ -11,6 +11,7 @@
     ```
   * Analysis
     ```
+    calc_rmsd_hv1 rmsd_hv1 segment 1
     calc_rmsf_hv1 rmsf_hv1
     count_wat_z waters-in-zrange.dat protein,and,resid,223,and,name,CZ protein,and,resid,208,and,name,CZ
     ```
