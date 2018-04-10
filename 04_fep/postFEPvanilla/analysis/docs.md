@@ -2,7 +2,7 @@
 
 
 # Documentation for analysis scripts for FEP simulations in NAMD
-Last updated: Mar 23 2018
+Last updated: Apr 10 2018
 
 Documentation template:
 
@@ -15,44 +15,38 @@ Documentation template:
 
 -----------------------------------------------------------------------------------------------------------------
 
------------------------------------------------------------------------------------------------------------------
-*View contacts to some selection:*
-```
-#vmd -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/viewHbonds.vmd -args ../taut1_18629-19_k208restr.psf ../npt01-fwd.dcd
-```
+*View hbond contacts for some selection:*
+`vmd -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/viewHbonds.vmd -args ../taut1_18629-19_k208restr.psf ../npt01-fwd.dcd`
 
+-----------------------------------------------------------------------------------------------------------------
 
 ### `1_rmsd`
-`/beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/1_rmsd/rmsd_trajectory.tcl`
-`/beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/1_rmsd/xyPlot.py`
-`/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/2_rmsd/2_plotTrajDat.py` ... xyPlot.py may be a potential redundancy of this script??
+`/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl`
+`/DFS-L/DATA/mobley/limvt/analysis/plotXY.py`
 
 * *Description*:
    * Calculate RMSD of Hv1 along trajectory, by Hv1 helix and overall (includes 2GBI if present)
-   * `rmsd_trajectory.tcl`
-   * `xyPlot.py`
-* *Usage*:
-   * `vmdt -e rmsd_trajectory.tcl -args pdbref withGBI inpsf indcd`
 * *Examples*:
-   * Easier to copy and modify the runcmd document for each case. Change file names as well as GBI type.
-   * `cd /beegfs/DATA/mobley/limvt/hv1/04_fep/1_tautomer/18629-19/f1_R211S/1_S211/analysis/1_rmsd`
-   * `vmdt -e rmsd_trajectory.tcl -args ../../taut1_18629-19_s211.pdb 1 ../../taut1_18629-19_s211.psf ../../npt01-fwd.dcd`
-   * `python xyPlot.py -i rmsd_byChain_everystep.dat -d $' \t ' -c '1,2,3,4,5,6' -m 100 -x 'time (ns)' -y 'RMSD (A)' -l "backbone;S1;S2;S3;S4;2GBI" -o rmsd_byChain_everystep.png`
+   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl -args ../../taut1_18629-19_s211.psf 1 ../../taut1_18629-19_s211.pdb ../../npt01-fwd.dcd`
+      - `calc_rmsd_hv1 rmsd_hv1 segment 1`
+      - `calc_rmsf_hv1 rmsf_hv1`
+   * `python /DFS-L/DATA/mobley/limvt/analysis/plotXY.py -i rmsd_hv1.dat -m 100 -x 'time (ns)' -y 'RMSD (A)' -l 'TM bb;Hv1 S1;Hv1 S2;Hv1 S3;Hv1 S4;2GBI (t1)' -o rmsd_chain-runAvg.png`
+   * TODO `python /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/1_rmsd/xyPlot.py -i rmsd_byChain.dat -c 1,6 -m 100 -x 'time (ns)' -y 'RMSD (A)' -l 'Hv1 backbone;2GBI (t1)' -o rmsd_gbi-runAvg.png`
+
    
 
 -----------------------------------------------------------------------------------------------------------------
 
 ### `2_ligClose`
 * *Description*:
-   * `closeWat.tcl`
    * `lig2protDist.py`
    * `ligCloseWat.tcl`
    * `ligHbonds.tcl`
 * *Usage*:
-   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/2_ligClose/closeWat.tcl -args psf dcd sel`
+   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/2_ligClose/ligCloseWat.tcl -args psf dcd sel`
 * *Examples*:
-   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/2_ligClose/closeWat.tcl -args ../../*.psf ../../npt01.dcd GBI2`
-   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/2_ligClose/ligHbonds.tcl -args ../../*.psf ../../npt01.dcd GBI1`
+   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/2_ligClose/ligCloseWat.tcl -args ../../*.psf ../../npt01.dcd resname,GBI2`
+   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/postFEPvanilla/analysis/2_ligClose/ligHbonds.tcl -args ../../*.psf ../../npt01.dcd resname,GBI1`
 
 
 -----------------------------------------------------------------------------------------------------------------
@@ -79,7 +73,6 @@ Documentation template:
 ### `4_dists`
 
 * *Description*: 
-   * `calcAng.tcl`
    * `calcDist.tcl` - Calculate the distance between one selection of interest and a number of other selections of interest.
 * *Parameters*: 
    * PSF file
@@ -96,5 +89,26 @@ Documentation template:
 * *Notes*: 
    * If there are spaces in the selection, separate them with COMMAS, else will be parsed as multiple selections.
      (Quotation marks, square brackets, and curly brackets don't help.)
+
+
+* *Description*: 
+   * `calcAng.tcl` - Measure dihedral angle of atom1-atom2-atom3-atom4.
+* *Parameters*: 
+   * PSF file
+   * DCD file
+   * main selection of interest, 
+   * other selection to measure distance from. 
+* *Returns*: 
+* *Usage*: 
+* *Examples*:
+* *Notes*: 
+   * If there are spaces in the selection, separate them with COMMAS, else will be parsed as multiple selections.
+     (Quotation marks, square brackets, and curly brackets don't help.)
+
+
+* *Description*: 
+   * `polarPlot.py` - Generate scatter plot or histogram over a polar coordinate plot. Ideal for angle measurement data.
+* *Usage*: 
+* *Examples*:
 
 -----------------------------------------------------------------------------------------------------------------
