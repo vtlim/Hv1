@@ -6,7 +6,8 @@
 #    [3] "draw delete all" to start over
 # Adapted from: http://www.ks.uiuc.edu/Research/vmd/vmd-1.7.1/ug/node173.html
 # Full path names for sourcing:
-#    mounted: /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/sandbox_chgScript1/drawBox.tcl
+#    gpl: /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/fixChg/drawBox.tcl
+#    cas: /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/analysis/fixChg/drawBox.tcl
  
 
 proc draw_box {boxcen halfx halfy halfz} {
@@ -55,7 +56,57 @@ proc draw_box {boxcen halfx halfy halfz} {
 }
 
 proc draw_plane {halflength dimension dimvalue style} {
-    # "draw_plane_line 40 z -45 line" will draw a square outline with side length 80 (2x40) at z=-45
+    # "draw_plane 40 z -45 line" will draw a square outline with side length 80 (2x40) at z=-45
+    if {$dimension=="x"} {
+        set miny [expr 0.0 - $halflength]
+        set maxy [expr 0.0 + $halflength]
+
+        set minz [expr 0.0 - $halflength]
+        set maxz [expr 0.0 + $halflength]
+
+        set allx $dimvalue
+
+        if {$style=="line"} {
+            puts "Drawing a plane outline at x=$dimvalue"
+            draw color yellow
+            draw line "$allx $maxy $maxz" "$maxx $miny $maxz"
+            draw line "$allx $miny $maxz" "$minx $miny $minz"
+            draw line "$allx $miny $minz" "$maxx $maxy $minz"
+            draw line "$allx $maxy $minz" "$maxx $maxy $maxz"
+
+        } elseif {$style=="plane"} {
+            puts "Drawing a plane filled at x=$dimvalue"
+            draw color yellow
+            draw triangle "$allx $maxy $minz" "$allx $maxy $maxz" "$allx $miny $maxz"
+            draw triangle "$allx $miny $maxz" "$allx $miny $minz" "$allx $maxy $minz"
+        }
+    }
+
+    if {$dimension=="y"} {
+        set minx [expr 0.0 - $halflength]
+        set maxx [expr 0.0 + $halflength]
+
+        set minz [expr 0.0 - $halflength]
+        set maxz [expr 0.0 + $halflength]
+
+        set ally $dimvalue
+
+        if {$style=="line"} {
+            puts "Drawing a plane outline at y=$dimvalue"
+            draw color yellow
+            draw line "$maxx $ally $maxz" "$minx $ally $maxz"
+            draw line "$minx $ally $maxz" "$minx $miny $minz"
+            draw line "$minx $ally $minz" "$maxx $ally $minz"
+            draw line "$maxx $ally $minz" "$maxx $ally $maxz"
+
+        } elseif {$style=="plane"} {
+            puts "Drawing a plane filled at y=$dimvalue"
+            draw color yellow
+            draw triangle "$maxx $ally $minz" "$maxx $ally $maxz" "$minx $ally $maxz"
+            draw triangle "$minx $ally $maxz" "$minx $ally $minz" "$maxx $ally $minz"
+        }
+    }
+
     if {$dimension=="z"} {
         set minx [expr 0.0 - $halflength]
         set maxx [expr 0.0 + $halflength]
