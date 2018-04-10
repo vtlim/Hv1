@@ -90,6 +90,7 @@ Documentation template:
    * If there are spaces in the selection, separate them with COMMAS, else will be parsed as multiple selections.
      (Quotation marks, square brackets, and curly brackets don't help.)
 
+-----------------------------------------------------------------------------------------------------------------
 
 * *Description*: 
    * `calcAng.tcl` - Measure dihedral angle of atom1-atom2-atom3-atom4.
@@ -105,6 +106,7 @@ Documentation template:
    * If there are spaces in the selection, separate them with COMMAS, else will be parsed as multiple selections.
      (Quotation marks, square brackets, and curly brackets don't help.)
 
+-----------------------------------------------------------------------------------------------------------------
 
 * *Description*: 
    * `polarPlot.py` - Generate scatter plot or histogram over a polar coordinate plot. Ideal for angle measurement data.

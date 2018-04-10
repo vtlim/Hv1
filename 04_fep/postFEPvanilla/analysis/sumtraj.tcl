@@ -1,9 +1,12 @@
 
 
 # Purpose: Create wrapped summary trajectory.
-# Usage: vmdt -e sumtraj.tcl -args psffile skip outputName dcdfile1 lastframe1 [dcdfile2 lastframe2] [dcdfile3 lastframe3]
+#
+# Usage: vmdt -e sumtraj.tcl -args psffile outputName skip dcdfile1 lastframe1 [dcdfile2 lastframe2] [dcdfile3 lastframe3]
+# Ex:    vmdt -e sumtraj.tcl -args in.psf  wrap10.dcd 10   npt01.dcd 5000      npt02.dcd 5000
+#
 # Last frame can be obtained by subtracting one from catdcd output
-# !! MULTIPLE DCD'S HAVE NOT BEEN TESTED AND VERIFIED !!
+# Version: Oct 4 2017
 
 # for dopbc
 package require tempoUserVMD
@@ -11,8 +14,8 @@ package require tempoUserVMD
 # read in command line arguments
 set arglen [llength $argv]
 set inpsf  [lindex $argv 0]
-set skip  [lindex $argv 1]
-set outputName [lindex $argv 2]
+set outputName [lindex $argv 1]
+set skip  [lindex $argv 2]
 
 
 mol new $inpsf
