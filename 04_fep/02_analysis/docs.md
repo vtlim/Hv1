@@ -2,23 +2,44 @@
 
 
 # Documentation for analysis scripts for FEP simulations in NAMD
-Last updated: 2018 Feb 12
+Last updated: Apr 10 2018
 
-Documentation template:
+-----------------------------------------------------------------------------------------------------------------
 
-`script`
+
+## Contents
+* `1_dG`
+* `2_rmsd`
+* `3_dihed`
+* `4_TTcontacts`
+* `5_rmsf`
+    - Use `structural/analyzeDCD.tcl`
+* `6_oneWin`
+* `7_waters`
+    - Use `structural/analyzeDCD.tcl`
+* `fixChg`
+* `structural`
+* `view`
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+## `script`
+
+Filename(s) go here.
 * *Description*:
 * *Required parameters*:
 * *Returns*:
 * *Usage*:
 * *Example*:
 
+
 -----------------------------------------------------------------------------------------------------------------
 
+
 ## `1_dG` analysis script
+
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/1_dG/bar4fep.py`
-
-
 * *Description*:
    * Compile .fepout files from each window of FEP calculations, then compute final free energy using BAR.
    * BAR = Bennett acceptance ratio
@@ -32,12 +53,13 @@ Documentation template:
    * Execute in the main job's subdirectory of analysis results.   
    * `python /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/1_dG/bar4fep.py -d ../../ -v -p -e 1 -t 5 --decomp > a.out`
 
+
 -----------------------------------------------------------------------------------------------------------------
 
+
 ## `2_rmsd` analysis scripts
+
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/2_rmsd/1_rmsdFEPwins_byChain.tcl`
-
-
 * *Description*: 
    * Calculate RMSD of Hv1 protein, segregated by S1-S4 segments, over the 40 windows of FEP mutation.
 * *Required parameters*:
@@ -56,7 +78,9 @@ Documentation template:
    * May need to change script inside if want to read both FWD and REV or just one direction only.  
      Don't leave curly brace even while commented.
 
+
 -----------------------------------------------------------------------------------------------------------------
+
 
 ## `4_TTcontacts` analysis scripts
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/4_TTcontacts/analysisInp.tcl`
@@ -77,9 +101,37 @@ Documentation template:
    * Deprecated in favor of nodes/edges analysis in postFEP analysis.
 
 
+-----------------------------------------------------------------------------------------------------------------
+
+
+## `6_oneWin` analysis scripts
+
+`/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/6_oneWin/extractWork.tcl`
+* *Description*: Process fepout file and associated NAMD trajectory to segregate based on cutoff of dE value of fepout.
+* *Required parameters*: Input fepout file, associated PSF and DCD, filename identifier.
+   * For a filename identifier of "R01", the outputs would be named `timesteps_work_R01.dat`, `alchemy_R01_bin1.fepout`, `traj_R01_bin1.dcd` 
+* *Returns*:
+   * dat file with list of timesteps separated into bin1 and bin2
+   * bin1 fepout having snapshots where fepout dE is less than or equal to the cutoff
+   * bin2 fepout having snapshots where fepout dE is less than or equal to the cutoff
+   * bin1 DCD having snapshots where fepout dE is less than or equal to the cutoff
+   * bin2 DCD having snapshots where fepout dE is greater than the cutoff
+* *Usage*:
+   * `vmdt -e extractWork.tcl -args in.fepout in.psf in.dcd outputBase`
+* *Example*:
+   * `vmdt -e extractWork.tcl -args ../../FEP_R/lambda_01/alchemy01.fepout ../../00_main/18629-19_R211S.psf ../../FEP_R/lambda_01/alchemy01.dcd R01`
+
+
+`/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/6_oneWin/plotMeasVsWork.py`
+* *Description*:
+* *Required parameters*:
+* *Returns*:
+* *Usage*:
+* *Example*:
 
 
 -----------------------------------------------------------------------------------------------------------------
+
 
 ## View scripts
 
