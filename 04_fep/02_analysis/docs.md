@@ -81,39 +81,6 @@ Documentation template:
 
 -----------------------------------------------------------------------------------------------------------------
 
-
-
-## `5_rmsf` analysis scripts
-`/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/5_rmsf/rmsfByRes.tcl`
-
-
-* *Description*:
-   * Calculate average RMSF over trajectory for each residue. Use dummy atom representing each residue's center of mass.
-* *Required parameters*:
-   * Input psf
-   * Input pdb
-   * DCD for analysis -- multiple is ok
-* *Returns*:
-   * Output .dat file
-   * Output .pdb file with avg rmsf in the occupancy column (protein only)
-   * Output .psf to go along with the pdb (protein only)
-* *Usage*:
-   * `vmdt -e file.tcl -args inpsf inpdb indcd`
-* *Example*:  
-   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/5_rmsf/rmsfByRes.tcl -args ../../00_main/18629-19_R208K.psf ../../00_main/18629-19_R208K.pdb ../../FEP_F/lambda_09/alchemy09.dcd`
-   * `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/5_rmsf/rmsfByRes.tcl -args ../../00_main/18629-19_D112E.psf ../../00_main/18629-19_D112E.pdb ../../FEP_F/lambda_*/*dcd`
-* *Notes*:
-   * Before using, check out the PDB and pick out a lone atom (like SOD or CL) to use as a dummy atom! Record index in the script. Subtract 1 from PDB index for VMD index numbering.
-   * Takes about 20 min on GP interactive node with nes2.8.
-   * Rename files to not mix up forward and reverse: `for file in rmsf_hv1*; do mv "${file}" "`echo $file | sed 's/rmsf_hv1/rmsf_hv1_fwd/'`"; done`
-   * Rename files to not mix up forward and reverse: `rename -v s/rmsf_hv1/rmsf_fwd/ rmsf_hv1.*` -- works on mycomp not on gp
-
-
-
-
------------------------------------------------------------------------------------------------------------------
-
-
 ## View scripts
 
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/view/openAllWindows.tcl`
