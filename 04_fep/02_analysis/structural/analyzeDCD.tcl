@@ -7,8 +7,8 @@
 #  2. [call some analysis function in this script in VMD terminal/console] 
 #
 # Full path names for sourcing:
-#    gpl: /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/2_structure/analyzeDCD.tcl
-#    cas: /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/analysis/2_structure/analyzeDCD.tcl
+#    gpl: /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structual/analyzeDCD.tcl
+#    cas: /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/analysis/structual/analyzeDCD.tcl
 
 # ========================== Variables ========================= #
 
@@ -73,8 +73,8 @@ proc diff {before after} {
 proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} } {
     # ============================================================
     # Measure RMSD for Hv1. System is aligned by transmembrane
-    # backbone, then RMSD can be calculated over backbone, TODO
-    # each segment (S1-S4), or average of each residue. TODO
+    # backbone, then RMSD can be calculated over backbone, 
+    # each segment (S1-S4), or each residue.
     #
     # Arguments
     #  - outfile : string
@@ -87,6 +87,11 @@ proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} } {
     #  - (nothing)
     # Example usage
     #  - calc_rmsd_hv1 rmsd_segmt_f-01 segment 1
+    # Notes
+    #  - Only choose the "residue" selection for a few trajectories
+    #    max. All 40 FEP windows will kill the job.
+    #  - Make sure to allocate enough memory (e.g., for segment selection
+    #    of 40 windows) as an interactive job.
     # ============================================================
     global inpsf
     global inpdb
@@ -99,7 +104,7 @@ proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} } {
     puts "Defining groups for RMSD calculation..."
     lappend rgroup "protein and backbone and {{resid 100 to 125} or {resid 134 to 160} or {resid 168 to 191} or {resid 198 to 220}}"
     # determine groups for level of detail for protein
-    if {$level == "residue"} {
+    if {$level == "residue" || $level == "resid"} {
         for {set resid 88} {$resid < 231} {incr resid} {
             lappend rgroup "protein and backbone and resid $resid"
         }
@@ -121,7 +126,7 @@ proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} } {
     puts $outDataFile "# Data from files:\n#  $inpsf\n#  $dcdlist\n"
     puts $outDataFile "# RMSD (Angstroms)"
     set header "# Win | TM bb"
-    if {$level == "residue"} {
+    if {$level == "residue" || $level == "resid"} {
         for {set resid 88} {$resid < 231} {incr resid} {
           lappend allres $resid    
         }
@@ -130,7 +135,6 @@ proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} } {
     } elseif {$level == "segment"} {
         set header "$header | S1\t\tS2\t\tS3\t\tS4"
     }
-
     if {$gbi == 1 || $gbi == 2} {
         set header "$header\t\t2GBI"
     }
@@ -140,7 +144,7 @@ proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} } {
     puts "Calculating RMSD..."
     set num_steps [molinfo top get numframes]
     for {set frame 0} {$frame < $num_steps} {incr frame} {
-        if {[expr $frame % 50 == 0]} {puts $frame}
+        if {[expr $frame % 100 == 0]} {puts $frame}
         set curr_line "$frame\t"
         foreach x $rgroup {
             set sel0 [atomselect 0 $x frame 0]
@@ -242,6 +246,10 @@ proc count_wat_z {outfile pre_z0 pre_z1} {
     set watlist [list]
     set sel_z0 [split $pre_z0 {,}] ;# string selection text
     set sel_z1 [split $pre_z1 {,}]
+    set sel_x0 "protein and resid 173 and name O"
+    set sel_x1 "protein and resid 134 and name CA" 
+    set sel_y0 "protein and resid 124 and name O"
+    set sel_y1 "protein and resid 148 and name C"
 
     # wrap and IGNORE given pdb -- sometimes has error (a=0.000000 b=0.000000 c=0.000000)
     set n [molinfo top get numframes]
@@ -260,10 +268,10 @@ proc count_wat_z {outfile pre_z0 pre_z1} {
     puts $outDataFile "# Selection 1 (z=$z0): $sel_z0\n# Selection 2 (z=$z1): $sel_z1"
 
     # get box edges
-    set x0 [[atomselect top "protein and resid 173 and name O" frame 0] get {x}]
-    set x1 [[atomselect top "protein and resid 134 and name CA" frame 0] get {x}]
-    set y0 [[atomselect top "protein and resid 124 and name O" frame 0] get {y}]
-    set y1 [[atomselect top "protein and resid 148 and name C" frame 0] get {y}]
+    set x0 [[atomselect top $sel_x0 frame 0] get {x}]
+    set x1 [[atomselect top $sel_x1 frame 0] get {x}]
+    set y0 [[atomselect top $sel_y0 frame 0] get {y}]
+    set y1 [[atomselect top $sel_y1 frame 0] get {y}]
     puts $outDataFile "# Edge 1 (x=$x0): $sel_x0\n# Edge 2 (x=$x1): $sel_x1\n# Edge 3 (y=$y0): $sel_y0\n# Edge 4 (y=$y1): $sel_y1"
     
     # loop over frames
@@ -297,4 +305,4 @@ foreach dcd $dcdlist {    ;# maybe alter the first step to read in if FEP bc 50 
 # wrapping not done here bc rmsd and rmsf use pdb reference, which may not have pbc params
 
 set __after [info procs] ; # get list of avail functions
-puts "\n\nAll trajectories loaded; ready for analysis. Available functions:\n[diff $__before $__after]\n\n" 
+puts "\n\n[pwd]\nAll trajectories loaded; ready for analysis. Available functions:\n[diff $__before $__after]\n\n" 

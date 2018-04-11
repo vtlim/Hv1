@@ -37,7 +37,7 @@ Filename(s) go here.
 -----------------------------------------------------------------------------------------------------------------
 
 
-## `1_dG` analysis script
+## `1_dG`
 
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/1_dG/bar4fep.py`
 * *Description*:
@@ -57,7 +57,7 @@ Filename(s) go here.
 -----------------------------------------------------------------------------------------------------------------
 
 
-## `2_rmsd` analysis scripts
+## `2_rmsd`
 
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/2_rmsd/1_rmsdFEPwins_byChain.tcl`
 * *Description*: 
@@ -79,10 +79,28 @@ Filename(s) go here.
      Don't leave curly brace even while commented.
 
 
+`/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl`
+* *Description*:
+   * Analyze trajectory via RMSD, RMSF, or count of waters within region.
+* *Required parameters*:
+   * Input PSF
+   * Input PDB
+   * Input DCD(s)
+* *Returns*:
+   * Text file with data
+* *Usage*:
+   1. Load file using the Tcl script.
+   2. In the VMD terminal or TK console, execute the proc of interest.
+* *Example*:
+   1. `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl -args ../../00_main/18629-19_R211S.psf 1 ../../00_main/18629-19_R211S.pdb ../../FEP_F/*/*dcd`
+   2. `calc_rmsd_hv1 rmsd_segmt_fwd segment 1`
+   3. `python /DFS-L/DATA/mobley/limvt/analysis/plotXY.py -i rmsf_hv1_rev.dat -g 40 -m 10`
+
+
 -----------------------------------------------------------------------------------------------------------------
 
 
-## `4_TTcontacts` analysis scripts
+## `4_TTcontacts`
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/4_TTcontacts/analysisInp.tcl`
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/4_TTcontacts/contactAnalysis.tcl`
 *From*: J. Alfredo Freites
@@ -104,7 +122,17 @@ Filename(s) go here.
 -----------------------------------------------------------------------------------------------------------------
 
 
-## `6_oneWin` analysis scripts
+## `5_rmsf`
+`/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl`
+* *Example*:
+   1. `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl -args ../../00_main/18629-19_R211S.psf 1 ../../00_main/18629-19_R211S.pdb ../../FEP_F/*/*dcd`
+   2. `calc_rmsf_hv1 rmsf_hv1_fwd`
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+## `6_oneWin`
 
 `/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/6_oneWin/extractWork.tcl`
 * *Description*: Process fepout file and associated NAMD trajectory to segregate based on cutoff of dE value of fepout.
@@ -128,6 +156,16 @@ Filename(s) go here.
 * *Returns*:
 * *Usage*:
 * *Example*:
+
+-----------------------------------------------------------------------------------------------------------------
+
+
+## `7_waters`
+
+`/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl`
+* *Example*:
+   1. `vmdt -e /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl -args ../../00_main/18629-19_R211S.psf 1 ../../00_main/18629-19_R211S.pdb ../../FEP_F/*/*dcd`
+   2. `count_wat_z waters_in_zrange-fwd.dat protein,and,resid,159,and,name,CA protein,and,resid,118,and,name,CA`
 
 
 -----------------------------------------------------------------------------------------------------------------
