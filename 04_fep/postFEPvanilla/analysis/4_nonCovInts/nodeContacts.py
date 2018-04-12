@@ -2,7 +2,21 @@
 """
 
 DESCRIPTION: Process node-edge data files for contact interactions.
-Uses outputs of Tcl scripts by Eric Wong & Alfredo Freites.
+
+Input: Data files from VMD Tcl scripts by Eric Wong & Alfredo Freites.
+Output: Pickle file with pandas dataframe with headers for the following:
+  - node_i: nodes have their own indices, not corresponding to protein resid.
+  - node_j
+  - weight: number of contacts between two given nodes for a pair.
+      I think every pair of a certain node_i and node_j should have same weight.
+  - attribute: description of the edge based on node types in the pair.
+      Attribute has the following options:
+      HPHOB: between two nonpolar nodes
+      COUL: between positive or negative nodes (4 combinations possible)
+      HBOND: between a dipolar node and one of (dipolar, positive, negative)
+      STER: the default, everything else
+  - count: how many times (trajectory frames) the node pair had contact
+  - average: weight/count
 
 By: Victoria Lim, UCI
 

@@ -15,7 +15,22 @@ import seaborn as sns
 
 def getEdgePair(node1, node2, edges):
     """
-    TODO
+    Get edge information that involves the specified two nodes.
+    This function uses node indices as parameters; to pass in
+    protein residue indices, use the function getContactPair.
+
+    Parameters
+    ----------
+    node1 : int
+        Index of node_i. This is the node index not protein index.
+    node2 : int
+        Index of node_j. Should be larger than node_i.
+    edges : pandas dataframe
+        Dataframe in which to search for interaction.
+
+    Returns
+    -------
+    pandas dataframe
 
     Notes
     -----
@@ -27,20 +42,26 @@ def getEdgePair(node1, node2, edges):
     """
     return edges[(edges.node_i == node1) & (edges.node_j == node2)]
 
+
 def getContactPair(res1, res2, nodes, edges):
     """
-    TODO
+    Get edge information that involves the two specified protein residues.
+    This function is similar to getEdgePair but takes into protein indices.
 
     Parameters
     ----------
-    res1
-    res2 | int | other protein residue number. this int should be less than res1
-    nodes
-    edges
+    res1 : int
+        protein residue number to use for node_i
+    res2 : int
+        protein resiude number to use for node_j. Should be greater than res1.
+    nodes : pandas dataframe
+        Dataframe in which to translate protein index to node index (indices).
+    edges : pandas dataframe
+        Dataframe in which to search for interaction.
 
     Returns
     -------
-    TODO
+    pandas dataframe
 
     """
     df1 = getResidInfo(res1,nodes,resExcludes=['WAT'])
@@ -51,12 +72,22 @@ def getContactPair(res1, res2, nodes, edges):
 
     return edges[(edges.node_i.isin(indexList1)) & (edges.node_j.isin(indexList2))]
 
+
 def findInEdges(nodeNum, edges, att=None):
     """
     Find the specified node index in either node_i or node_j columns of input edges df.
 
     Parameters
+    ----------
+    nodeNum : int
+        This is the node index not protein index.
+    edges : pandas dataframe
+        Dataframe in which to search for node.
+
     Returns
+    -------
+    pandas dataframe
+
     """
     edges = edges.copy()
     if att is not None:
@@ -71,20 +102,22 @@ def getResidInfo(resid, nodes, resExcludes=[]):
 
     Parameters
     ----------
-    nodes: pandas dataframe of nodes
-    resid: integer value of the protein residue index
-    resExcludes: list of strings, for each residues to ignore.
-                 e.g., ['WAT']
+    resid : int
+        protein residue number
+    nodes : pandas dataframe
+        Dataframe in which to translate protein index to node index (indices).
+    resExcludes: list
+        List containing strings for residues to ignore. E.g., ['WAT']
+
     Returns
     -------
-    nodes_id: pandas dataframe with only residue of interest
+    pandas dataframe
 
     """
     nodes_id = nodes.loc[nodes['resid'] == resid]
     nodes_id = nodes_id[~nodes_id.resname.isin(resExcludes)]
 
     return nodes_id
-
 
 
 def idxToResid(idx, nodes, idOnly=False):
@@ -126,6 +159,39 @@ def idxToResid(idx, nodes, idOnly=False):
     return code
 
 
+def trimEdgesTM(nodes, edges):
+    """
+    Process edges to remove edges that don't include transmembrane (TM)
+    protein residue. In other words, only keep edges that involve at
+    least one TM residue. The TM residue may contact a non-TM residue,
+    water, or another TM residue.
+
+    Parameters
+    ----------
+    nodes : pandas dataframe
+        Pandas dataframe with information on nodes (residues)
+    edges : pandas dataframe
+        Pandas dataframe with information on edges (contacts)
+
+    Returns
+    -------
+    pandas dataframe
+
+    """
+
+    # define which residues are in TM region
+    seg1 = list(range(99,126))
+    seg2 = list(range(134,161))
+    seg3 = list(range(168,192))
+    seg4 = list(range(198,221))
+    segtm = seg1+seg2+seg3+seg4
+
+    # get node indices for residues in TM region
+    protein_nodes = nodes[(nodes['resid'].isin(segtm)) & (nodes['resname'] != 'WAT')]
+    prot_node_ids = protein_nodes.index.tolist()
+
+    # keep edges with at least one node that is a TM residue
+    return edges[ (edges['node_i'].isin(prot_node_ids)) | (edges['node_j'].isin(prot_node_ids)) ]
 
 
 def prioritizeOrPivot(edges, prioritize=True, rawNum=None):
@@ -165,21 +231,24 @@ def protLigInts(nodes, edges, rawNum=250, dry=1):
 
     Parameters
     ----------
-    nodes   | pandas df | pandas dataframe with information on nodes (residues)
-    edges   | pandas df | pandas dataframe with information on edges (contacts)
-    rawNum  | int       | How many interactions to use before further processing.
-                          Further processing = remove adjacent & intra-residue interactions.
-    dry     | int       | 2 means no waters at all even to protein/ligand
-                          1 means no water-water interactions
-                          0 means allow waters (NOT implemented)
+    nodes : pandas dataframe
+        Pandas dataframe with information on nodes (residues)
+    edges : pandas dataframe
+        Pandas dataframe with information on edges (contacts)
+    rawNum : int
+        How many interactions to use before further processing.
+        Further processing = remove adjacent & intra-residue interactions.
+    dry : int
+        2 means no waters at all even to protein/ligand
+        1 means no water-water interactions
+        0 means allow waters (NOT YET implemented)
 
     Returns
     -------
-    watless_edges - pandas PIVOTED dataframe with reduced and filtered interactions
-                    new format:
-                     > node_i as index column
-                     > node_j as different columns
-                     > average interaction strength in cell intersecting node_i and node_j
+    pandas PIVOTED dataframe with reduced and filtered interactions, formatted as:
+     > node_i as index column
+     > node_j as different columns
+     > average interaction strength in cell intersecting node_i and node_j
 
     """
     edges = edges.copy()
@@ -222,28 +291,27 @@ def selectionInts(nodes, edges, indices, rawNum=50, dry=True):
     """
     Parameters
     ----------
-    nodes   | pandas df | pandas dataframe with information on nodes (residues)
-    edges   | pandas df | pandas dataframe with information on edges (contacts)
-    indices | pandas df | pandas dataframe of node indices of selection
-    rawNum  | int       | How many interactions to use before further processing.
-                          Further processing = remove adjacent & intra-residue interactions.
-    dry     | Bool      | true to ignore any water-interactions of given selection
+    nodes : pandas dataframe
+        Pandas dataframe with information on nodes (residues)
+    edges : pandas dataframe
+        Pandas dataframe with information on edges (contacts)
+    indices : list of integers
+        List of node indices of selection. Two examples:
+        1. gidx_1 = nodes_1.index[nodes_1['resname'] == 'GBI1'].tolist()
+        2. selNodes = getResidInfo(211, nodes_2, resExcludes=['WAT'])
+           selInds = selNodes.index.tolist()
+    rawNum : int
+        How many interactions to use before further processing.
+        Further processing = remove adjacent & intra-residue interactions.
+    dry : Boolean
+        True to ignore any water-interactions of given selection
 
     Returns
     -------
-    sel_edges - pandas PIVOTED dataframe with interactions for given selection
-                new format:
-                 > node_i as index column
-                 > node_j as different columns
-                 > average interaction strength in cell intersecting node_i and node_j
-
-
-    Examples of selecting indices
-    -----------------------------
-    > gidx_1 = nodes_1.index[nodes_1['resname'] == 'GBI1'].tolist()
-
-    > selNodes = getResidInfo(211, nodes_2, resExcludes=['WAT'])
-    > selInds = selNodes.index.tolist()
+    pandas PIVOTED dataframe with interactions for given selection, formatted as:
+     > node_i as index column
+     > node_j as different columns
+     > average interaction strength in cell intersecting node_i and node_j
 
     """
     sel_edges = edges.copy()
@@ -320,9 +388,6 @@ def plotHeatInts(nodes,edges,minHeat=0,maxHeat=20,colors=None,size=(20,20),selti
     plt.title('\"Strongest\" interactions of {}'.format(seltitle))
     plt.show()
     print('interaction range is from {} to {}; verify if this is appropriate'.format(minHeat,maxHeat))
-
-
-
 
 
 def diffEdges(nodes_x,nodes_y,edges_x,edges_y):
@@ -426,36 +491,6 @@ def diffdiffEdges(nodes_x,nodes_y,edges_x,edges_y):
     return diff_nodes_10, diff_edges_10, mutstart_10, offset_10
 
 
-
-
-def trimEdgesList(edges, iList=[], jList=[]):
-    """
-    Parameters
-    ----------
-    edges | pandas dataframe | PIVOTED dataframe with node_i as index and node_j as columns
-    iList | list of integers for node_i's to save. If blank, keep all.
-    jList | list of integers for node_j's to save. If blank, keep all.
-
-    Returns
-    -------
-    edges | pandas dataframe of specified iList and jList
-
-    """
-    edges = edges.copy()
-    if (len(iList) > 0) and (len(jList) > 0):
-        print("ERROR: both iList and jList are blank for trimming edges dataframe.")
-
-    # filter dataframes based on ROW indices in common
-    if len(iList) > 0:
-        edges = edges[edges.index.isin(iList)]
-
-    # filter dataframes based on COLUMN indices in common
-    if len(jList) > 0:
-        edges = edges[jList]
-
-    return edges
-
-
 def similarizeTwoEdges(edges_x, edges_y, mutstart=None, offset=None, ignoreI=True):
     """
     Take in two similar dataframes of edges and find common interactions.
@@ -526,8 +561,6 @@ def similarizeTwoEdges(edges_x, edges_y, mutstart=None, offset=None, ignoreI=Tru
     return edges_x, edges_y
 
 
-
-
 def condenseWaters(nodes, edges):
     """
     For each non-water node, sum up all the interaction weights involving water,
@@ -588,6 +621,7 @@ def condenseWaters(nodes, edges):
 
     return nodes, edges
 
+
 def plotBarWaters(nodes, edges, rawNum=20, size=(40,10),pivoted=False):
     """
     Plot the interaction strength of the summed waters by residue.
@@ -627,5 +661,4 @@ def plotBarWaters(nodes, edges, rawNum=20, size=(40,10),pivoted=False):
     plt.show()
 
     return waterEdges
-
 
