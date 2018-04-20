@@ -1,0 +1,108 @@
+
+set outfile            pairInt
+structure              ../noGBI_s211.psf
+coordinates            ../noGBI_s211.pdb
+paraTypeCharmm         on
+parameters          /DFS-L/DATA/mobley/limvt/toppar/par_all36_lipid.prm
+parameters          /DFS-L/DATA/mobley/limvt/toppar/par_all36_prot.prm
+parameters          /DFS-L/DATA/mobley/limvt/toppar/cgenff2b6/par_all36_cgenff.prm
+parameters          /DFS-L/DATA/mobley/limvt/toppar/toppar_water_ions.jaf2.str
+parameters          /DFS-L/DATA/mobley/limvt/toppar/gbi_final.str
+set temp               295
+
+### Input Files
+#firsttimestep
+#bincoordinates		${binfile}.coor
+#binvelocities		${binfile}.vel  ;# remove "temperature" if this is on
+temperature		$temp
+
+### Periodic Boundary Conditions
+#extendedSystem		${binfile}.xsc
+cellBasisVector1    	80.   0.   0.
+cellBasisVector2     	0.    80.  0.
+cellBasisVector3     	0.    0    88.
+cellOrigin 2.0621421337127686 -2.1327762603759766 0.041834961622953415
+
+### Force-Field Parameters
+exclude			    scaled1-4
+1-4scaling		    1.0
+cutoff			    12.0
+switching		    on
+switchdist		    10.0
+pairlistdist		16.0
+vdwForceSwitching	yes
+margin              3.0
+
+### Integrator Parameters
+timestep		    2.0	;# fs/step
+rigidBonds		    all
+nonbondedFreq 		1
+fullElectFrequency	2
+stepspercycle		20
+
+### PME (for full-system periodic electrostatics)
+PME			        on
+PMEInterpOrder		6	;# spline order = 6 in charmm
+PMEGridSpacing      1.0
+
+### Constant Temperature Control
+langevin	    	on
+langevinDamping		1
+langevinTemp		$temp
+
+### Constant Pressure Control
+useGroupPressure        yes     ;# must be used with rigidBonds (shake)
+useFlexibleCell         yes     ;# Allow box to flux (yes-mem  no-prot)
+useConstantRatio        yes     ;# yes-mem, no-prot
+LangevinPiston          on      
+LangevinPistonTarget    1.0     ;# pressure in bar
+LangevinPistonPeriod    200
+LangevinPistonDecay     100
+LangevinPistonTemp      $temp
+
+
+### Output Files
+outputname		${outfile}
+outputEnergies	1000
+outputTiming	1000
+
+restartname 	${outfile}
+restartfreq		1000
+
+DCDfile 		${outfile}.dcd
+DCDfreq			1000
+DCDUnitCell		yes
+
+XSTfile			${outfile}.xst
+XSTfreq			1000
+
+### Electric Field
+eFieldOn		yes
+eField			0. 0. 0.14  ;# depolarizing field vector (kcal/(mol A e))
+
+
+#minimize 1000
+#run 2500000 ;# 5ns
+
+### Specify energy calculation for selection                     
+pairInteraction         on                                       
+pairInteractionFile     ../label149.pdb
+pairInteractionSelf     off
+pairInteractionCol      B                                        
+pairInteractionGroup1   1                                        
+pairInteractionGroup2   2                                        
+                                                                 
+### Perform energy analysis without colvars on same trajectory.  
+                                                                 
+set ts 1000   ; # first frame saved was frame 1000               
+coorfile open dcd ../npt01-fwd.dcd                        
+                                                                 
+# Read all frames until nonzero is returned.                     
+while { ![coorfile read] } {                                     
+  firstTimestep $ts                                              
+  # Compute energies and forces, but don't try to move the atoms.
+  run 0                                                          
+  incr ts 1000                                                   
+}                                                                
+coorfile close                                                   
+
