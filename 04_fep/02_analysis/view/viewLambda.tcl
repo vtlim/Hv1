@@ -1,7 +1,9 @@
 
-# Usage: vmd -e viewLambda.tcl -args mypsf myfep mydcd mut
-# Example: vmd -e viewLambda.tcl -args ../../00_main/19415-13-c1_R211S.psf ../../00_main/19415-13-c1_R211S.fep alchemy17.dcd 211
-# Notes:
+# Purpose:  Open single lambda window with appropriate representations for ligand, protein, mutation site.
+# Usage:    vmd -e viewLambda.tcl -args mypsf myfep mydcd mut
+# Example:  vmd -e viewLambda.tcl -args ../../00_main/19415-13-c1_R211S.psf ../../00_main/19415-13-c1_R211S.fep alchemy17.dcd 211
+# Locations:
+#  - /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/view/viewLambda.tcl
 #  - /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/analysis/view/viewLambda.tcl
 
 set mypsf [lindex $argv 0]
