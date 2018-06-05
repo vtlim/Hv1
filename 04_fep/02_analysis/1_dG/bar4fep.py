@@ -47,7 +47,7 @@ def cat_fepout(fep_dir, outfile):
 
    Parameters
    ----------
-   fep_dir: string. Full path of direcotry containing FEP results.
+   fep_dir: string. Full path of directory containing FEP results.
    rev: Boolean. True if fep_dir contains reverse FEP results.
                  Default is forward (False).
 
@@ -64,7 +64,6 @@ def cat_fepout(fep_dir, outfile):
    with open(outfile, 'w') as output:
       print('Concatenating {}'.format(outfile))
       for fname in fep_file:
-         #print(fname)
          with open(fname) as infile:
             output.write(infile.read())
 
@@ -86,6 +85,8 @@ def ParseFEP( fep_file ):
     dEs_dict: dictionary of all the dE steps for each window (key=window int)
               40 windows = 40 entries. Each key has x values for x num of steps.
     dGs_dict: dictionary of all the dG steps for each window (key=window int)
+    elecs_dict: dictionary of the electrostatic component of the dEs
+    vdws_dict: dictionary of the vdW component of the dEs
     window: dictionary of start dLambda and stop dLambda per each window.
             key is the integer lambda window number.
 
@@ -159,16 +160,16 @@ def DoBAR(fwds, revs, label, verbose):
     -------
     dgs: 1D list of accumulated list of energy values. Ex. if each step was 2,
        then dgs would be [0,2,4...]
-    gsdlist: 1D list of accompanying stdevs to the dgs list
+    gsdlist: 1D list of accompanying sterrs to the dgs list
 
     """
 
     fwd_ss = {} # subsampled version of fwds
     rev_ss = {} # subsampled version of revs
     dg_bar = np.zeros([len(fwds)], np.float64)  # allocate storage: dG steps
-    gsd_bar = np.zeros([len(fwds)], np.float64) # allocate storage: dG stdev steps
+    gsd_bar = np.zeros([len(fwds)], np.float64) # allocate storage: dG sterr steps
     dgs = np.zeros([len(fwds)], np.float64)     # allocate storage: dG accumulated
-    gsdlist = np.zeros([len(fwds)], np.float64) # allocate storage: dG stdev accum
+    gsdlist = np.zeros([len(fwds)], np.float64) # allocate storage: dG sterr accum
 
 
     #corr_time = np.zeros([len(fwds)], np.float64)
@@ -195,7 +196,7 @@ def DoBAR(fwds, revs, label, verbose):
         dg_bar[kF], gsd_bar[kF] = BAR(fwd_ss[kF],rev_ss[kR])
         bar[kF] = [ np.sum(dg_bar), dg_bar[kF], gsd_bar[kF] ]
 
-    # calculate the net dG standard deviation = sqrt[ sum(s_i^2) ]
+    # calculate the net dG standard error = sqrt[ sum(s_i^2) ]
     gsd = (np.sum(np.power(gsd_bar, 2)))**0.5
 
     net = 0.
@@ -204,7 +205,7 @@ def DoBAR(fwds, revs, label, verbose):
         # accumulate net dGs into running sums (plot this)
         dgs[i] = dg_bar[i] + net
         net = dgs[i]
-        # combine the stdevs: s = sqrt(s1^2 + s2^2 + ...)
+        # combine the sterrs: s = sqrt(s1^2 + s2^2 + ...)
         gsdlist[i] = ((gsd_bar[i])**2.+(netsd)**2.)**0.5
         netsd = gsdlist[i]
 
@@ -297,10 +298,10 @@ def dg_plot(dGs_F, dGs_R, window_F, window_R, eqTime, totTime, title, outfname):
     dGs_R: dictionary of all the dGs for all windows going backward (key=window number)
          Note - based on how FEP calcns are conducted with F and R, need to loop
                 over this list in reverse. Aka last of w_R goes with first of w_F.
-    eqTime: float value of how many ns of equilibration per window (based on alchEquilSteps)
-    totTime: float value of total sim time per window including eqTime (based on runFEP nSteps)
     window_*: dictionary of start dLambda and stop dLambda per each window.
             key is the integer lambda window number.
+    eqTime: float value of how many ns of equilibration per window (based on alchEquilSteps)
+    totTime: float value of total sim time per window including eqTime (based on runFEP nSteps)
     title: string name of the main title over all 40 windows
     outfname: string name of the image to be saved
 
@@ -361,7 +362,7 @@ def gbar_plot(dgs, sds, title, outfname):
     Parameters
     ----------
     dgs: 1D array of dGs
-    sds: 1D array of standard deviations corresponding to dgs array.
+    sds: 1D array of standard errors corresponding to dgs array.
     title: string name of the main title
     outfname: string name of the image to be saved
 
