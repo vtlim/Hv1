@@ -45,8 +45,7 @@ module load namd/2.11-MPISMP
 module list
 
 cd $SLURM_SUBMIT_DIR
-
-echo "Working Directory:" pwd
+echo "Working Directory: $( pwd )"
 echo 'Array ID number:' $SLURM_ARRAY_TASK_ID
 
 lambda=$SLURM_ARRAY_TASK_ID
