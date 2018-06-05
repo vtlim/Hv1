@@ -1,0 +1,2 @@
+* make sure checkpoint.slurm script is correct before using, especially at the "runFEP" line and total number of arguments
+* extend.slurm script is same as checkpoint.slurm script except it takes in user-supplied total number of steps, instead of checking the value of the past input file

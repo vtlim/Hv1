@@ -1,26 +1,23 @@
-!/bin/bash
+#!/bin/bash
 
 # SUBMIT THIS SCRIPT INSIDE THE FEP_*/ DIRECTORY CONTAINING LAMBDA WINDOWS
 # Change array number to submit individual jobs.
 # If you plan to change margin (or other) do so manually in *.inp file first.
 
-#SBATCH --job-name="F150A_1504_RS"
-#SBATCH --array=2
+#SBATCH --job-name="t1_r2s_fwd-01"
+#SBATCH --array=1
 #SBATCH --partition=mf_nes2.8
 #SBATCH --mem=8gb
 #SBATCH --time=72:00:00
 #SBATCH --export=ALL
-
 #SBATCH --ntasks-per-node=2
 #SBATCH --ntasks-per-core=2
 #SBATCH --threads-per-core=2
-
 #SBATCH --cpus-per-task=8
-#SBATCH --exclude="c-3-[341-344], c-6-[231-234], c-8-[251-254]"
+#SBATCH --exclude="c-5-27,c-4-3,c-4-20,c-3-[341-344], c-6-[231-234], c-8-[251-254]"
 
 # SBATCH --cpus-per-task=12
 # SBATCH --exclude="c-4-[3-20], c-5-[9-42], c-6-[27-30], c-7-[7-24], c-8-[16-24,27,28,31,32,35,36,39,40]"
-
 
 #------------SIMULATION SETTINGS -----------#
 lambda=$SLURM_ARRAY_TASK_ID
@@ -28,11 +25,12 @@ lambda=$SLURM_ARRAY_TASK_ID
 
 printf "Start Time:$( date )\n"
 module load namd/2.11-MPISMP
+module list
 
 cd $SLURM_SUBMIT_DIR
 echo "Hostname:" $HOSTNAME
 echo "Working Directory: $( pwd )"
-echo "Array ID number:" $SLURM_ARRAY_TASK_ID
+printf "\nArray ID number:" $SLURM_ARRAY_TASK_ID
 
 # set working lambda directories
 if [ $lambda -lt 10 ]; then
@@ -44,8 +42,8 @@ else
 fi
 
 # check output file
-finline=$( tail -5 "$lambda_dir"/"$fname.log" | grep "Program finished" )
-if [[ $finline == *"Program finished"* ]]; then
+finline=$( tail -5 "$lambda_dir"/"$fname.log" | grep "End of program" )
+if [[ $finline == *"End of program"* ]]; then
    echo "$lambda_dir Complete"
    echo "End Time:$( date )"
    exit 
@@ -102,14 +100,14 @@ else
    sed -i "s/$fname/$fname-cpt/"               $fname-cpt.inp # outfile name* b4 input
    sed -i "/set binfile/d"                     $fname-cpt.inp # remove old inputname
    sed -i "1iset binfile            $fname"    $fname-cpt.inp # set new input
-   sed -i -e "s/#firsttimestep/firsttimestep $step/" $fname-cpt.inp # set firsttimestep
+   #sed -i -e "s/#firsttimestep/firsttimestep $step/" $fname-cpt.inp # set firsttimestep, not allowed for fep
    sed -i "s/temperature\t/\#temperature\t/"   $fname-cpt.inp # comment temperature* \t
    sed -i "s/#bincoordinates/bincoordinates/"  $fname-cpt.inp # use binary coordinates
    sed -i "s/#binvelocities/binvelocities/"    $fname-cpt.inp # use binary velocities
    sed -i "s/#extendedSystem/extendedSystem/"  $fname-cpt.inp # use periodic cell
    sed -i "s/cellBasis/\#cellBasis/"            $fname-cpt.inp # comment cell sizes
    sed -i "s/cellOrigin/\#cellOrigin/"          $fname-cpt.inp # comment cell origin
-#   sed -i "s/alchEquil/\#alchEquil/"            $fname-cpt.inp # remove FEP Equil steps =============
+   sed -i "s/alchEquil/\#alchEquil/"            $fname-cpt.inp # remove FEP Equil steps
         
    # Evaluate remaining FEP steps
    fepline=$( tail -n 5 "$fname.inp" | grep "runFEP" )
@@ -134,9 +132,11 @@ else
       exit 
    fi
 
-   echo "Remaning FEP steps: $remstep"
-   # runFEPmin to runFEP, keep first 35 chars, include remstep 
-   sed -i -e "s/Pmin/P/" -r -e "s/runFEP(.{29}).*/runFEP\1 $remstep/" $fname-cpt.inp
+   printf "Remaining FEP steps: $remstep\n"
+   # runFEPmin to runFEP, keep first 28 chars, include remstep 
+   sed -i -e "s/Pmin/P/" -r -e "s/runFEP(.{22}).*/runFEP\1 $remstep/" $fname-cpt.inp
+   sed -i "/dLambda/d" $fname-cpt.inp
+   echo "#          start stop dLambda nSteps" >> $fname-cpt.inp
         
    # Submit FEP run
    cpt=$SLURM_CPUS_PER_TASK
@@ -144,7 +144,7 @@ else
    
    
    srun --propagate=STACK --cpu_bind=v,sockets --cpus-per-task=$cpt \
-        namd2 ++ppn $((cpt-1)) +isomalloc_sync $fname-RS.inp > $fname-cpt.log
+        namd2 ++ppn $((cpt-1)) +isomalloc_sync $fname-cpt.inp > $fname-cpt.log
    cd ..
 fi
 echo "End Time:$( date )"
