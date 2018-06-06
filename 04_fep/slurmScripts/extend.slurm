@@ -4,9 +4,12 @@
 # Change array number to submit individual jobs.
 # If you plan to change margin (or other) do so manually in *.inp file first.
 
-#SBATCH --job-name="t1_r2s_fwd-40"
-#SBATCH --array=40
+#SBATCH --job-name="t0_f3_fwd"
+#SBATCH --array=01
 #SBATCH --partition=mf_nes2.8
+# SBATCH --depend=afterany:6403000
+
+
 #SBATCH --mem=8gb
 #SBATCH --time=72:00:00
 #SBATCH --export=ALL
@@ -14,7 +17,7 @@
 #SBATCH --ntasks-per-core=2
 #SBATCH --threads-per-core=2
 #SBATCH --cpus-per-task=8
-#SBATCH --exclude="c-5-27,c-4-3,c-4-20,c-3-[341-344], c-6-[231-234], c-8-[251-254]"
+#SBATCH --exclude="c-5-29,c-4-7,c-5-27,c-4-3,c-4-20,c-3-[341-344], c-6-[231-234], c-8-[251-254]"
 
 # SBATCH --cpus-per-task=12
 # SBATCH --exclude="c-4-[3-20], c-5-[9-42], c-6-[27-30], c-7-[7-24], c-8-[16-24,27,28,31,32,35,36,39,40]"
@@ -31,7 +34,7 @@ module list
 cd $SLURM_SUBMIT_DIR
 echo "Hostname:" $HOSTNAME
 echo "Working Directory: $( pwd )"
-printf "\nArray ID number:" $SLURM_ARRAY_TASK_ID
+printf "\nArray ID number: $SLURM_ARRAY_TASK_ID\n"
 
 # set working lambda directories
 if [ $lambda -lt 10 ]; then
@@ -115,14 +118,21 @@ if ! [[ "$remstep" =~ ^[0-9]+$ ]]; then
    echo "Remaining steps was not an integer."
    exit 
 fi
-
 printf "Remaining FEP steps: $remstep\n\n"
-# runFEPmin to runFEP, keep first 28 chars, include remstep 
-sed -i -e "s/Pmin/P/" -r -e "s/runFEP(.{22}).*/runFEP\1 $remstep/" $fname-cpt.inp
+
+# Grep old command and convert * spaces to one space each to get lambda values
+start_stop_chg=$(grep runFEPmin $fname-cpt.inp | tr -s ' ' | cut -d ' ' -f2-4)
+
+# Delete old runFEPmin command and comment
+sed -i "/runFEPmin/d" $fname-cpt.inp
 sed -i "/dLambda/d" $fname-cpt.inp
-echo "#          start stop dLambda nSteps" >> $fname-cpt.inp
+
+# Compile new runFEP command, and add new comment
+echo "runFEP $start_stop_chg $remstep" >> $fname-cpt.inp
+echo "#      start stop dLambda nSteps" >> $fname-cpt.inp
      
 # Submit FEP run
+rm FFTW_NAMD*txt
 cpt=$SLURM_CPUS_PER_TASK
 #mpiname -a
 
