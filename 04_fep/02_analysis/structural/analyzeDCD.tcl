@@ -7,8 +7,8 @@
 #  2. [call some analysis function in this script in VMD terminal/console] 
 #
 # Full path names for sourcing:
-#    gpl: /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structual/analyzeDCD.tcl
-#    cas: /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/analysis/structual/analyzeDCD.tcl
+#    gpl: /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl
+#    cas: /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/analysis/structural/analyzeDCD.tcl
 
 # ========================== Variables ========================= #
 
@@ -401,4 +401,4 @@ foreach dcd $dcdlist {    ;# maybe alter the first step to read in if FEP bc 50 
 }
 
 set __after [info procs] ; # get list of avail functions
-puts "\n\n[pwd]\nAll trajectories loaded; ready for analysis. Available functions:\n[diff $__before $__after]\n\n" 
+puts "\n\n[pwd]\n\nCheck if trajectories are done loading with \"molinfo top get numframes\" then analyze. Available functions:\n[diff $__before $__after]\n\n" 

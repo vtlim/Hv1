@@ -68,11 +68,11 @@ proc draw_plane {halflength dimension dimvalue style} {
 
         if {$style=="line"} {
             puts "Drawing a plane outline at x=$dimvalue"
-            draw color yellow
-            draw line "$allx $maxy $maxz" "$maxx $miny $maxz"
-            draw line "$allx $miny $maxz" "$minx $miny $minz"
-            draw line "$allx $miny $minz" "$maxx $maxy $minz"
-            draw line "$allx $maxy $minz" "$maxx $maxy $maxz"
+            draw color blue
+            draw line "$allx $maxy $maxz" "$allx $miny $maxz" width 2 
+            draw line "$allx $miny $maxz" "$allx $miny $minz" width 2
+            draw line "$allx $miny $minz" "$allx $maxy $minz" width 2
+            draw line "$allx $maxy $minz" "$allx $maxy $maxz" width 2
 
         } elseif {$style=="plane"} {
             puts "Drawing a plane filled at x=$dimvalue"
@@ -93,11 +93,11 @@ proc draw_plane {halflength dimension dimvalue style} {
 
         if {$style=="line"} {
             puts "Drawing a plane outline at y=$dimvalue"
-            draw color yellow
-            draw line "$maxx $ally $maxz" "$minx $ally $maxz"
-            draw line "$minx $ally $maxz" "$minx $miny $minz"
-            draw line "$minx $ally $minz" "$maxx $ally $minz"
-            draw line "$maxx $ally $minz" "$maxx $ally $maxz"
+            draw color blue
+            draw line "$maxx $ally $maxz" "$minx $ally $maxz" width 2 
+            draw line "$minx $ally $maxz" "$minx $ally $minz" width 2
+            draw line "$minx $ally $minz" "$maxx $ally $minz" width 2
+            draw line "$maxx $ally $minz" "$maxx $ally $maxz" width 2
 
         } elseif {$style=="plane"} {
             puts "Drawing a plane filled at y=$dimvalue"
@@ -118,12 +118,12 @@ proc draw_plane {halflength dimension dimvalue style} {
 
         if {$style=="line"} {
             puts "Drawing a plane outline at z=$dimvalue"
-            draw color yellow
-            draw line "$minx $miny $allz" "$maxx $miny $allz"
-            draw line "$minx $miny $allz" "$minx $maxy $allz"
+            draw color blue
+            draw line "$minx $miny $allz" "$maxx $miny $allz" width 2 
+            draw line "$minx $miny $allz" "$minx $maxy $allz" width 2
         
-            draw line "$maxx $miny $allz" "$maxx $maxy $allz"
-            draw line "$minx $maxy $allz" "$maxx $maxy $allz"
+            draw line "$maxx $miny $allz" "$maxx $maxy $allz" width 2
+            draw line "$minx $maxy $allz" "$maxx $maxy $allz" width 2
 
         } elseif {$style=="plane"} {
             puts "Drawing a plane filled at z=$dimvalue"
