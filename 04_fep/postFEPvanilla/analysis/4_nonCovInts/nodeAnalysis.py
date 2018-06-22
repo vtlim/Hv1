@@ -127,14 +127,18 @@ def idxToResid(idx, nodes, idOnly=False):
 
     Parameters
     ----------
-    idx    | int       | integer index of the pandas dataframe
-    nodes  | pandas df | pandas dataframe of which to search
-    idOnly | Bool      | specify True to return numpy.int64 of residue number
-                         specify False to return code with resname abbrev
-                         ex., True returns 150; False returns 'F150:sc'
+    idx : int
+        integer index of the pandas dataframe
+    nodes : pandas dataframe
+        pandas dataframe of which to search
+    idOnly : Boolean
+        True to return numpy.int64 of residue number
+        False to return code with resname abbrev
+        ex., True returns 150; False returns 'F150:sc'
+
     Returns
     -------
-    code - string or numpy.int64 value of residue. (see idOnly parameter)
+    string or numpy.int64 value of residue (based on idOnly parameter)
 
     """
     aa_dict = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
@@ -194,32 +198,62 @@ def trimEdgesTM(nodes, edges):
     return edges[ (edges['node_i'].isin(prot_node_ids)) | (edges['node_j'].isin(prot_node_ids)) ]
 
 
-def prioritizeOrPivot(edges, prioritize=True, rawNum=None):
+def prioritize(edges, rawNum):
     """
+    TODO
     Pull out N strongest interactions, or pivot the table.
     Not meant for user; implemented in protLigInts and selectionInts functions.
     This function handles cases of whether dataframe has edges or difference of edges.
+
+    Parameters
+    ----------
+    edges : pandas dataframe
+    rawNum : integer
+
+    Returns
+    -------
+    pandas dataframe
+
     """
     edges = edges.copy()
-    if prioritize:
-        if rawNum is None:
-            print("ERROR: rawNum variable was not passed into prioritizeOrPivot function")
-            return None
-        try: # Pull out the N strongest interactions (should be no negative values)
-            edges = edges.sort_values('average',ascending=False).head(rawNum)
-        except KeyError: # if no 'average' column then this is one df minus another so there are negatives
-            # sort by magnitude to get + and - changes
-            tempinds = edges.avg_subt.abs().sort_values(ascending=False).head(rawNum).index
-            edges = edges.loc[tempinds]
-        return edges
+    try: # Pull out the N strongest interactions (should be no negative values)
+        edges = edges.sort_values('average',ascending=False).head(rawNum)
+    except KeyError: # if no 'average' column then this is one df minus another so there are negatives
+        # sort by magnitude to get + and - changes
+        tempinds = edges.avg_subt.abs().sort_values(ascending=False).head(rawNum).index
+        edges = edges.loc[tempinds]
+    return edges
 
-    else: # pivot table for plotting
+
+def pivot(edges, data=""):
+    """
+    TODO
+    Pull out N strongest interactions, or pivot the table.
+    Not meant for user; implemented in protLigInts and selectionInts functions.
+    This function handles cases of whether dataframe has edges or difference of edges.
+
+    Parameters
+    ----------
+    edges : pandas dataframe
+    rawNum : integer
+
+    Returns
+    -------
+    pandas dataframe
+
+    """
+    edges = edges.copy()
+    if data=="edgetype":
+        edges = edges.pivot(index='node_i',columns='node_j', values='edgetype')
+    else:
         try:
             edges = edges.pivot(index='node_i',columns='node_j', values='average')
         except KeyError:
             edges = edges.pivot(index='node_i',columns='node_j', values='avg_subt')
-        edges = edges.dropna(axis=1,how='all') # drop columns with all nan's
-        return edges
+    edges = edges.dropna(axis=1,how='all') # drop columns with all nan's
+
+    return edges
+
 
 def protLigInts(nodes, edges, rawNum=250, dry=1):
     """
@@ -235,10 +269,10 @@ def protLigInts(nodes, edges, rawNum=250, dry=1):
         Pandas dataframe with information on nodes (residues)
     edges : pandas dataframe
         Pandas dataframe with information on edges (contacts)
-    rawNum : int
+    rawNum : integer
         How many interactions to use before further processing.
         Further processing = remove adjacent & intra-residue interactions.
-    dry : int
+    dry : integer
         2 means no waters at all even to protein/ligand
         1 means no water-water interactions
         0 means allow waters (NOT YET implemented)
@@ -264,7 +298,7 @@ def protLigInts(nodes, edges, rawNum=250, dry=1):
 
 
     # Pull out the N strongest interactions
-    watless_edges = prioritizeOrPivot(watless_edges,prioritize=True,rawNum=rawNum)
+    watless_edges = prioritize(watless_edges,rawNum=rawNum)
     if watless_edges is None: return
 
     # Make temp copy to compare protein resIDs to filter out those in same/adj resid
@@ -280,9 +314,6 @@ def protLigInts(nodes, edges, rawNum=250, dry=1):
     # drop node interactions in same resid or adjacent
     dropinds = temp.index[((temp['node_i']-temp['node_j']).abs() <= 1) == True].tolist()
     watless_edges.drop(dropinds, inplace=True)
-
-    # pivot table for plotting
-    watless_edges = prioritizeOrPivot(watless_edges,prioritize=False)
 
     return watless_edges
 
@@ -308,10 +339,19 @@ def selectionInts(nodes, edges, indices, rawNum=50, dry=True):
 
     Returns
     -------
-    pandas PIVOTED dataframe with interactions for given selection, formatted as:
-     > node_i as index column
-     > node_j as different columns
-     > average interaction strength in cell intersecting node_i and node_j
+    sel_edges - pandas PIVOTED dataframe with interactions for given selection
+                new format:
+                 > node_i as index column
+                 > node_j as different columns
+                 > average interaction strength in cell intersecting node_i and node_j
+
+
+    Examples of selecting indices
+    -----------------------------
+    > gidx_1 = nodes_1.index[nodes_1['resname'] == 'GBI1'].tolist()
+
+    > selNodes = getResidInfo(211, nodes_2, resExcludes=['WAT'])
+    > selInds = selNodes.index.tolist()
 
     """
     sel_edges = edges.copy()
@@ -324,7 +364,7 @@ def selectionInts(nodes, edges, indices, rawNum=50, dry=True):
     sel_edges = sel_edges.loc[sel_edges['node_i'].isin(indices) | sel_edges['node_j'].isin(indices)]
 
     # Pull out the N strongest interactions
-    sel_edges = prioritizeOrPivot(sel_edges,prioritize=True,rawNum=rawNum)
+    sel_edges = prioritize(sel_edges,rawNum=rawNum)
     if sel_edges is None: return
 
     # put all the GBI nodes in the i spot
@@ -332,17 +372,34 @@ def selectionInts(nodes, edges, indices, rawNum=50, dry=True):
         [sel_edges["node_j"], sel_edges["node_i"]], [sel_edges["node_i"], sel_edges["node_j"]])
     sel_edges = sel_edges[~sel_edges['node_j'].isin(indices)] # remove self-interactions
 
-    # pivot table for plotting
-    sel_edges = prioritizeOrPivot(sel_edges,prioritize=False)
-
     return sel_edges
 
 
-def plotHeatInts(nodes,edges,minHeat=0,maxHeat=20,colors=None,size=(20,20),seltitle=""):
+def plotHeatInts(nodes,edges,minHeat=0,maxHeat=20,colors=None,size=(20,20),seltitle="",pivoted=False):
     """
 
-    maxHeat | int  | Maximum data point in heat color bar.
-                     May want to manually adjust if max edge data > default maxHeat.
+    Parameters
+    ----------
+    nodes : pandas dataframe
+    edges : pandas dataframe
+        Pivoted pandas dataframe (node_i indices as header, node_j indices as left column.)
+    minHeat : integer
+        Minimum data point in heat color bar.
+        Should be zero unless there's a special case.
+    maxHeat : integer
+        Maximum data point in heat color bar.
+        May want to manually adjust if max edge data > default maxHeat.
+    colors : string
+        String code referring to one of Python's color maps.
+        https://matplotlib.org/examples/color/colormaps_reference.html
+        Use a parameter of colors="edges" to color by edge type instead of strength.
+    size : tuple
+        Tuple of length 2 for (width, length) in matplotlib
+    seltitle : string
+        Title to list at the top of the plot
+    pivoted : Boolean
+        Whether or not the input edges is already pivoted (such as from s
+
     """
     def offsetHeatGrid():
         # offset the y-grid to match the label WITHOUT offsetting ticklabels
@@ -365,7 +422,33 @@ def plotHeatInts(nodes,edges,minHeat=0,maxHeat=20,colors=None,size=(20,20),selti
             ax.set_xticklabels(xlabels,minor=True) # put labels back in old placements
             ax.set_xticklabels([]) # turn off labels at new tick placements
 
-    plotInput = edges
+    def label_edge(row):
+        # https://stackoverflow.com/questions/26886653/pandas-create-new-column-based-on-values-from-other-columns
+        if row['attribute'] == "HPHOB": # two nonpolar nodes
+            return 1
+        if row['attribute'] == "COUL":  # two charged nodes
+            return 2
+        if row['attribute'] == "HBOND": # dipolar and charged nodes
+            return 3
+        if row['attribute'] == "STER":  # everything else
+            return 4
+        return -1
+
+
+    if (colors=="edgetype" and pivoted==True):
+        print("Cannot color by edgetype if you have pass in a pivoted edge plot.")
+        return
+
+    if pivoted:
+        plotInput = edges
+    elif colors=="edgetype":
+        # reassign the strength values in the edges dataframe
+        plotInput = edges.copy()
+        plotInput['edgetype'] = plotInput.apply (lambda row: label_edge(row),axis=1)
+        plotInput = pivot(plotInput, data='edgetype')
+    else:
+        plotInput = pivot(edges)
+
     plotNodes = nodes
 
     # generate plot labels based on residue name and residue number
@@ -376,6 +459,10 @@ def plotHeatInts(nodes,edges,minHeat=0,maxHeat=20,colors=None,size=(20,20),selti
     plt.clf()
     plt.subplots(figsize=size)
     sns.set(font_scale=2.1)
+    if colors=='edgetype':
+        colors="tab10"
+        vmin=0
+        vmax=4
     ax = sns.heatmap(plotInput.T,annot=True,yticklabels=ylabels,xticklabels=xlabels,
                      cmap=colors,vmin=minHeat, vmax=maxHeat)
 
@@ -459,6 +546,7 @@ def diffEdges(nodes_x,nodes_y,edges_x,edges_y):
 
     return nodes_unified, diff_edges_x, mut1_start, offset
 
+
 def diffdiffEdges(nodes_x,nodes_y,edges_x,edges_y):
     """
     Similar to diffEdges function but the input edges here have already been through diffEdges.
@@ -495,8 +583,12 @@ def similarizeTwoEdges(edges_x, edges_y, mutstart=None, offset=None, ignoreI=Tru
     """
     Take in two similar dataframes of edges and find common interactions.
     In other words, extract common node_i's and node_j's of each.
-    Pivoted dataframes come from after functions of protLigInts or selectionInts.
 
+    TODO: MORE IMPORTANT: rewrite this function. Originally was written for
+        two pivoted dataframes that were passed in, but since pivoting is now
+        done right before plotting (to keep edgetype information), this script
+        should be updated. After that, you should be able to remove the "pivoted"
+        variable in the plotHeatInts function.
     TODO: make segregation of i and j better. right now, checking ignoreI only in find common
         section, but if ignoreI is true, don't need to do ANY of the row stuff.
 
@@ -520,8 +612,8 @@ def similarizeTwoEdges(edges_x, edges_y, mutstart=None, offset=None, ignoreI=Tru
     edges_y
 
     """
-    edges_x = edges_x.copy()
-    edges_y = edges_y.copy()
+    edges_x = pivot(edges_x)
+    edges_y = pivot(edges_y)
 
     # get list of ROWS (node_i's) of each df. copy to not chg orig idx.
     is_from_x = np.copy(np.asarray(edges_x.index.values))
@@ -621,7 +713,6 @@ def condenseWaters(nodes, edges):
 
     return nodes, edges
 
-
 def plotBarWaters(nodes, edges, rawNum=20, size=(40,10),pivoted=False):
     """
     Plot the interaction strength of the summed waters by residue.
@@ -638,6 +729,7 @@ def plotBarWaters(nodes, edges, rawNum=20, size=(40,10),pivoted=False):
 
     Returns
     -------
+
     """
 
     if not pivoted:
@@ -646,19 +738,23 @@ def plotBarWaters(nodes, edges, rawNum=20, size=(40,10),pivoted=False):
         # place the node for summaryWater in the node_i spot
         waterEdges["node_i"], waterEdges["node_j"] = np.where(waterEdges['node_j'] == sumwatidx,
             [waterEdges["node_j"], waterEdges["node_i"]], [waterEdges["node_i"], waterEdges["node_j"]])
-        waterEdges = prioritizeOrPivot(waterEdges,prioritize=True,rawNum=rawNum)
+        waterEdges = prioritize(waterEdges,rawNum=rawNum)
         # after sort by value, sort the x-axis back by index again
         waterEdges = waterEdges.sort_values('node_j')
-        # pivot table, so that it can be used in similarizeTwoEdges function
-        waterEdges = prioritizeOrPivot(waterEdges,prioritize=False)
+        # pivot table for plotting
+        pivoted_waterEdges = pivot(waterEdges)
     else:
-        waterEdges = edges
+        pivoted_waterEdges = edges
     # plot
-    xlabels = [idxToResid(i, nodes) for i in list(waterEdges.columns.values)] # node_j's
+    xlabels = [idxToResid(i, nodes) for i in list(pivoted_waterEdges.columns.values)] # node_j's
     fig, ax = plt.subplots()
-    ax = waterEdges.T.plot(kind='bar',figsize=size,ax=ax,legend=False) # transpose to get columns as x-axis
+    ax = pivoted_waterEdges.T.plot(kind='bar',figsize=size,ax=ax,legend=False) # transpose to get columns as x-axis
     ax.set_xticklabels(xlabels)
     plt.show()
 
-    return waterEdges
+    if not pivoted:
+        return waterEdges
+    else:
+        return pivoted_waterEdges
+
 
