@@ -400,6 +400,10 @@ def plotHeatInts(nodes,edges,minHeat=0,maxHeat=20,colors=None,size=(20,20),selti
     pivoted : Boolean
         Whether or not the input edges is already pivoted (such as from s
 
+    Returns
+    -------
+    pivoted dataframe
+
     """
     def offsetHeatGrid():
         # offset the y-grid to match the label WITHOUT offsetting ticklabels
@@ -467,7 +471,6 @@ def plotHeatInts(nodes,edges,minHeat=0,maxHeat=20,colors=None,size=(20,20),selti
                      cmap=colors,vmin=minHeat, vmax=maxHeat)
 
     offsetHeatGrid()
-
     plt.grid()
     plt.ylabel('')
     plt.xlabel('')
@@ -475,6 +478,8 @@ def plotHeatInts(nodes,edges,minHeat=0,maxHeat=20,colors=None,size=(20,20),selti
     plt.title('\"Strongest\" interactions of {}'.format(seltitle))
     plt.show()
     print('interaction range is from {} to {}; verify if this is appropriate'.format(minHeat,maxHeat))
+
+    return plotInput
 
 
 def diffEdges(nodes_x,nodes_y,edges_x,edges_y):
