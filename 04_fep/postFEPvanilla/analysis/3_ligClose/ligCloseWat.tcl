@@ -11,17 +11,11 @@
 
 set inpsf [lindex $argv 0]
 set dcdlist [lindex $argv 1]
-#set prelig [lindex $argv 2]
 
 for {set i 2} {$i < $argc} {incr i} {
     set prelig [lindex $argv $i]
     lappend sellist [split $prelig {,}]
 }
-puts $sellist
-
-
-set dist 4
-set watlist [list]
 
 # TEMP until this function is moved into analyzeDCD.tcl
 set inskip ""
@@ -100,7 +94,6 @@ proc count_wat_near { outfile {dist 4} args } {
 # load files
 mol new $inpsf
 mol addfile $dcdlist type {dcd} first 0 last -1 step 10 waitfor -1
-#mol addfile $indcd type {dcd} first 0 last 100 step 1 waitfor -1
 pbc wrap -compound fragment -center com -centersel "protein" -all
 
 count_wat_near waters-near-selections.dat 4 $sellist
