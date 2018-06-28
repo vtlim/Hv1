@@ -7,6 +7,10 @@
 #   2. "view_clear"
 #   3. "view_[four/protein]"
 # By: Victoria Lim
+#
+# Source:
+#   * Greenplanet: /beegfs/DATA/mobley/limvt/hv1/github/02_configs/viewer.tcl
+#   * Cassandra:   /home/limvt/connect/greenplanet/goto-beegfs/hv1/github/02_configs/viewer.tcl
 # ============================================================================
 
 #set psf [glob *psf]
@@ -61,7 +65,7 @@ proc view_protein {} {
     mol addrep $moltop
     mol modselect $repcount $moltop protein and resid 134 to 160
     mol modstyle $repcount $moltop NewCartoon
-    mol modcolor $repcount $moltop ColorID $repcount
+    mol modcolor $repcount $moltop ColorID 3
     incr ::repcount
 
     # add representation for S3
