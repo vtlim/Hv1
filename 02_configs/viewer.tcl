@@ -1,13 +1,18 @@
 
 # ============================================================================
 # After loading psf and dcd, use this script for various visualizations of Hv1.
-# Only modifies visualization on TOP molecule.
+#
 # Steps:
 #   1. "source file.tcl"
 #   2. "view_clear"
 #   3. "view_[four/protein]"
 # By: Victoria Lim
 #
+# Notes:
+#   * Only modifies visualization on TOP molecule. If you want to change the visualization
+#     system, use command "reset_top [index_of_new_top]".
+#   * The reset_top proc assumes that the top molecule already has one representation, but
+#     if this is NOT true, use command "set ::repcount [how_many_already_exist]".
 # Source:
 #   * Greenplanet: /beegfs/DATA/mobley/limvt/hv1/github/02_configs/viewer.tcl
 #   * Cassandra:   /home/limvt/connect/greenplanet/goto-beegfs/hv1/github/02_configs/viewer.tcl
@@ -34,6 +39,13 @@ proc view_clear {} {
     }
     set ::repcount 0
 }
+
+
+proc reset_top { newtop } {
+    mol top $newtop
+    set ::repcount 1
+}
+
 
 proc view_protein {} {
     global repcount
@@ -139,6 +151,7 @@ proc view_four {} {
 proc view_dens_wat { {infile "watdens.dx"} } {
     # ============================================================
     # View volumetric density of water in given DX file.
+    # You will LIKELY have to adjust [Draw style > Isovalue] and [Trajectory > color scale].
     #
     # Arguments
     #  - infile : string
@@ -160,5 +173,7 @@ proc view_dens_wat { {infile "watdens.dx"} } {
     mol modstyle 0 $moltop Isosurface 0.032205 0 2 1 1 1
     mol modstyle 0 $moltop Isosurface 0.032205 0 0 1 1 1
     mol scaleminmax $moltop 0 -0.150000 0.050000 ;# note that moltop and repnum are switched
+
+    puts "\nDensity loaded. Probably need to adjust \[Draw style > Isovalue\] and \[Trajectory > color scale\]\n"
 
 } ;# end of view_dens_wat
