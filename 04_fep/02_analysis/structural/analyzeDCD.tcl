@@ -434,6 +434,7 @@ proc calc_dens_wat { {presel ""} {outfile "watdens"} } {
     # Returns
     #  - (nothing)
     # Example usage
+    #  - calc_dens_wat name,OH2,and,within,10,of,(protein,and,resid,112,185,211) watdens_nearSel.dx
     #  - calc_dens_wat name,OH2,and,within,10,of,protein watdens.dx
     #  - calc_dens_wat name,OH2,and,within,10,of,protein
     #  - calc_dens_wat
