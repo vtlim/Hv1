@@ -1,14 +1,18 @@
 
-
-# Purpose: Analyze list of trajectories using RMSD (TODO), RMSF, ...
-
+# Purpose: Analyze list of trajectories using RMSD, RMSF, water density, etc.
 # Usage:
 #  1. vmd -dispdev none -e file.tcl -args inpsf inskip inpdb indcd [indcd2 indcd3 ...]
 #  2. [call some analysis function in this script in VMD terminal/console]
 #
 # Full path names for sourcing:
-#    gpl: /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl
-#    cas: /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/analysis/structural/analyzeDCD.tcl
+#   - gpl: /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl
+#   - cas: /home/limvt/connect/greenplanet/goto-beegfs/hv1/04_fep/analysis/structural/analyzeDCD.tcl
+#
+# Notes:
+#   - Read in data before loading functions, else it doesn't load properly in visual mode with GUI.
+#   - Don't wrap after reading initial data bc rmsd/rmsf use pdb reference, which may not have pbc params
+#   - Comment out the "mol new ... mol addfile" section if you want the functions without loading. (UNTESTED)
+#     To load functions only, "source /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl"
 
 # ========================== Variables ========================= #
 
@@ -21,10 +25,18 @@ for {set i 3} {$i < $argc} {incr i} {
     lappend dcdlist [lindex $argv $i]
 }
 
+# read in data
+mol new $inpsf
+mol addfile $inpdb        ;# mol 0 == mol top
+foreach dcd $dcdlist {    ;# maybe alter the first step to read in if FEP bc 50 frames equil
+    mol addfile $dcd first 0 last -1 step $inskip waitfor all
+}
+
 # =============================================================== #
 
 package require pbctools
-set __before [info procs] ; # get list of avail functions
+set __before [info procs] ; # get list of avail functions before loading this script
+
 
 proc average L {
     # ============================================================
@@ -32,6 +44,7 @@ proc average L {
     # ============================================================
     expr ([join $L +])/[llength $L].
 }
+
 
 proc align_backbone { {refmolid 0} } {
     # ============================================================
@@ -60,6 +73,7 @@ proc align_backbone { {refmolid 0} } {
     }
 }
 
+
 proc diff {before after} {
     # ============================================================
     # Extract differences from two lists. Used in this script to
@@ -79,6 +93,7 @@ proc diff {before after} {
     }
     return [lsort $result]
 } ;# end of diff
+
 
 proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} {inpdb ""} } {
     # ============================================================
@@ -183,6 +198,7 @@ proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} {inpdb ""} } {
     close $outDataFile
 
 } ;# end of calc_rmsd_hv1
+
 
 proc calc_rmsf_hv1 {outfile} {
     # ============================================================
@@ -354,8 +370,7 @@ proc calc_dist { outfile pre0 pre1 {pre2 ""} {pre3 ""} } {
     #  - If calcDistances to match with colvars traj file, uncomment the first step0 line
     #  - If you get error: "measure center: bad weight sum, would cause divide by zero", double check selection language.
     #  - To specify selection, separate words with commas, not spaces. ex: protein,and,resid,112
-    #
-    # ========================== Variables ========================= #
+    # ============================================================
     global inpsf
     global inskip
     global inpdb
@@ -406,17 +421,69 @@ proc calc_dist { outfile pre0 pre1 {pre2 ""} {pre3 ""} } {
 
 } ;# end of calc_dist
 
-# =============================================================== #
-# read in data
-# wrapping not done here bc rmsd and rmsf use pdb reference, which may not have pbc params
-# comment out this section if you just want to use the functions without loading
-# then "source /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/structural/analyzeDCD.tcl"
-# =============================================================== #
-mol new $inpsf
-mol addfile $inpdb        ;# mol 0 == mol top
-foreach dcd $dcdlist {    ;# maybe alter the first step to read in if FEP bc 50 frames equil
-    mol addfile $dcd first 0 last -1 step $inskip waitfor all
-}
 
-set __after [info procs] ; # get list of avail functions
+proc calc_dens_wat { {presel ""} {outfile "watdens"} } {
+    # ============================================================
+    # Calculate volumetric density of water (or other given selection) over trajectory.
+    #
+    # Arguments
+    #  - presel : string
+    #      Selection for reference atom
+    #  - outfile : string
+    #       Basename of the output files for dx, psf, pdb. Default is "watdens".
+    # Returns
+    #  - (nothing)
+    # Example usage
+    #  - calc_dens_wat name,OH2,and,within,10,of,protein watdens.dx
+    #  - calc_dens_wat name,OH2,and,within,10,of,protein
+    #  - calc_dens_wat
+    # Notes
+    #  - Only feed this function WRAPPED TRAJECTORIES. Wrapping the traj before calling volmap in this function
+    #    doesn't work since the density doesn't align with the simulation (e.g., water slabs are out of range
+    #    of the density map).
+    #  - If you get error: "measure center: bad weight sum, would cause divide by zero", double check selection language.
+    #  - To specify selection, separate words with commas, not spaces. ex: protein,and,resid,112
+    # ============================================================
+    global inpsf
+    global inskip
+    global inpdb
+    global dcdlist
+    set moltop 0
+
+    # set vmd selection for waters
+    set watsel [split $presel {,}]
+    if {$presel == ""} {
+        set wat [atomselect top "name OH2"]
+        set watsel "name OH2"
+    } else {
+        set wat [atomselect top "$watsel"]
+    }
+
+    # DISCARD the input PDB bc not wrapped (a=0.000000 b=0.000000 c=0.000000); might skew volmap avg
+    animate delete beg 0 end 0 skip 0 $moltop
+
+    # generate the volumetric map
+    puts "Counting waters..."
+    volmap density $wat -allframes -combine avg -res 1 -mol $moltop -o $outfile.dx -weight mass
+
+    # write out corresponding psf/pdb of wrapped traj view with dx
+    animate write pdb $outfile.pdb beg 0 end 0 sel [atomselect $moltop all]
+    animate write psf $outfile.psf beg 0 end 0 sel [atomselect $moltop all]
+
+    # append trajectory information to output
+    set outDataFile [open $outfile.dx a]
+    puts $outDataFile "# Input PSF: $inpsf\n# Input DCD, skip $inskip: $dcdlist"
+    puts $outDataFile "# Density selection: $watsel\n"
+    close $outDataFile
+
+    # alert message about reliability of results
+    puts "\n\n\nFinished with calc_dens_wat. Results are only valid if a WRAPPED trajectory was input!\n"
+
+} ;# end of calc_dens_wat
+
+
+
+# =============================================================== #
+set __after [info procs] ; # get list of avail functions after loading this script
 puts "\n\n[pwd]\n\nCheck if trajectories are done loading with \"molinfo top get numframes\" then analyze. Available functions:\n[diff $__before $__after]\n\n"
+
