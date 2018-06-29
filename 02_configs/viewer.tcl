@@ -136,3 +136,29 @@ proc view_four {} {
     #mol showrep $moltop 1 0   ;# don't show protein
 }
 
+proc view_dens_wat { {infile "watdens.dx"} } {
+    # ============================================================
+    # View volumetric density of water in given DX file.
+    #
+    # Arguments
+    #  - infile : string
+    #      Name of the output file. Default is "watdens.dx".
+    # Returns
+    #  - (nothing)
+    # Example usage
+    #  - calc_dens_wat watdens.dx
+    #  - calc_dens_wat
+    # Notes
+    #  - If you want to use this function, the original call to analyzeDCD should not be vmdt.
+    # ============================================================
+    mol new $infile type {dx} first 0 last -1 step 1 waitfor 1 volsets {0 }
+    set moltop [molinfo top]
+
+    mol addrep $moltop
+    mol modstyle 0 $moltop Isosurface
+    mol modcolor 0 $moltop Volume 0
+    mol modstyle 0 $moltop Isosurface 0.032205 0 2 1 1 1
+    mol modstyle 0 $moltop Isosurface 0.032205 0 0 1 1 1
+    mol scaleminmax $moltop 0 -0.150000 0.050000 ;# note that moltop and repnum are switched
+
+} ;# end of view_dens_wat
