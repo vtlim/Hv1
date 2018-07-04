@@ -70,6 +70,8 @@ def shorten_cat_fepout(fep_dir, outfile, num_blocks, cur_block):
     with open(outfile, 'w') as output:
         print('Concatenating {}'.format(outfile))
         for fname in fep_file:
+            if lines_wanted < 2002:     # for my 1 ns equil setup. <===== CHECK
+                output.write("#STARTING\n") # to be compatible with bar4fep.py
             f = open(fname, "rb")
             extracted_lines = tail(f, lines_wanted)
             for i in extracted_lines:
