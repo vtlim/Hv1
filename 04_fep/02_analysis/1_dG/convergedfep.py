@@ -1,5 +1,5 @@
 
-# Purpose:
+# Purpose:  Concatenate all the windows' fepout files, but only take last bit from each.
 # Usage:    python convergedfep.py -d [/path/to/FEP-F/and/FEP-R] -n [num_blocks]
 # Example:  python convergedfep.py -d ../../../ -n 10
 
@@ -55,12 +55,13 @@ def tail( f, lines ):
 
     return ''.join(data).splitlines()[-lines:]
 
-def shorten_cat_fepout(fep_dir, outfile, num_blocks, cur_block):
+def shorten_cat_fepout(fep_dir, fepout_length, equil_length, outfile, num_blocks, cur_block):
 
+    # calculate how many lines of data contribute to ensemble average data
+    data_length = fepout_length - equil_length
 
     # calculate number of lines to keep
-    num_lines_in_file = 2506    # for my 5 ns setup. change if not applicable! <===== check me
-    lines_wanted = int((num_lines_in_file/num_blocks)*cur_block)
+    lines_wanted = int((fepout_length/num_blocks)*cur_block)
     print("Extracting {} lines".format(lines_wanted))
 
     # get list of all *.fepout file in this fep_dir
@@ -70,7 +71,7 @@ def shorten_cat_fepout(fep_dir, outfile, num_blocks, cur_block):
     with open(outfile, 'w') as output:
         print('Concatenating {}'.format(outfile))
         for fname in fep_file:
-            if lines_wanted < 2002:     # for my 1 ns equil setup. <===== CHECK
+            if lines_wanted < data_length:
                 output.write("#STARTING\n") # to be compatible with bar4fep.py
             f = open(fname, "rb")
             extracted_lines = tail(f, lines_wanted)
@@ -100,7 +101,7 @@ def convergedfep(way, **kwargs):
             print("!!! WARNING: {} already exists".format(newfile))
         elif os.path.exists(hdir) == True:
             if not os.path.exists("{:02}".format(i)): os.mkdir("{:02}".format(i))
-            shorten_cat_fepout(hdir, newfile, args.numblocks, i)
+            shorten_cat_fepout(hdir, args.feplength, args.equlength, newfile, args.numblocks, i)
         else:
             print(os.getcwd())
             raise OSError("No such file or directory '{}'".format(hdir))
@@ -116,6 +117,15 @@ if __name__ == "__main__":
                         help="Separate each window's fepout into this many blocks. "
                              "This will correspond to the number of concatenated "
                              "output files for each of F and R directions.")
+    parser.add_argument("-l", "--feplength", type=int, default=2506,
+                        help="How many lines are in a single fepout file. "
+                             "Default is set at 2506, for a 5 ns window with "
+                             "an output frequency of 1000.")
+    parser.add_argument("-e", "--equlength", type=int, default=504,
+                        help="How many lines precede the data collection line. "
+                             "This value should include the header saying "
+                             "\"STARTING COLLECTION OF...\" Default is set at "
+                             "504, for a 1 ns equil with output freq 1000.")
 
     args = parser.parse_args()
     opt = vars(args)
