@@ -40,6 +40,13 @@ proc view_clear {} {
     set ::repcount 0
 }
 
+proc smooth_rep { {moltop 0} {smoothsize 5} } {
+    global repcount
+    # doesn't work if some mol has NO representations
+    for {set i 0} {$i < $repcount} {incr i} {
+        mol smoothrep $moltop $i $smoothsize
+    }
+}
 
 proc reset_top { newtop } {
     mol top $newtop
