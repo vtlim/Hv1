@@ -20,7 +20,7 @@
             atomtypes ending with B are appearing (1.00 value).
          Hint: it might help to generate a temporary empty line before & after the -1 and 1 lines. 
 
-04. In VMD, view name.fep file. `vmd *fep -e /beegfs/DATA/mobley/limvt/hv1/04_fep/viewMutation.tcl -args NUM GBI1`
+04. In VMD, view name.fep file. `vmd *fep -e /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/view/viewMutation.tcl -args NUM GBI1`
      (-) NUM is the protein residue number.
      (a) check cell alignment with axes. see code snippets below.
      (b) Red atoms are disappearing and blue atoms are appearing (set color Beta).
@@ -42,25 +42,34 @@
     If not, modify stepline variable in checkpoint slurm script.
 
 02. Review checkpoint slurm script. Change array numbers.
+    This is either the checkpoint.slurm script or extend.slurm script.
 
 03. Submit script INSIDE the `FEP_*/` directory containing lambda windows.
 
-04. Combining windows
+04. Verify that the modified input file for extended run is correct. Especially runFEP line.
+
+05. Combining windows for results
+     (a) From simulation1, let's assign:
+           A = restarted step number from log file (should be consistent with xsc)
+           B = last step number reported in fepout file (ideally should be same unless crash)
+     (b) In lambda dir, make a copy of run1.fepout.
+         Trim end lines such that last line in fepout is A, not B.
+     (c) Copy all lines of run2.fepout into the copy-run1.fepout file.
+     (d) Verify same number of lines as a singly successfully completed run
+     (e) Copy and rename as run1.fepout in the RESULTS directory.
      (-) http://www.ks.uiuc.edu/Research/namd/mailing_list/namd-l.2006-2007/3594.html
          Collect dE values from the two half-windows and combine using exponential formula
-     (a) From simulation1: 
-           A = value of restarted step from log file (should be consistent with xsc)
-           B = last step reported in fepout file
-         In lambda dir, make a copy of run1.fepout.
-         Trim end lines such that last line in fepout is A, not B.
-     (b) Copy all lines of run2.fepout into the copy-run1.fepout file.
-     (c) Verify same number of lines as a singly successfully completed run
-     (d) Copy and rename as run1.fepout in the RESULTS directory.
+```
+/beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/1_dG/combineExtended.sh alchemy01.fepout alchemy01-cpt.fepout alchemy01-extended.fepout
+
+```
 
 ## File analysis
 
 Getting all the dG files from NAMD output
   * `grep 'Free energy' *fepout | awk '{print $12}'`
+For reverse direction, print results in reverse to get lambda 0 to lambda 40, and mult by -1
+  * `tac results_R.fepout | grep 'Free energy' | awk '{print $12*-1}'`
 
 Checking out work in one particular window:
   * `xb *fepout 2 7`
