@@ -1,6 +1,12 @@
 
-# Purpose:
+# Purpose: View different representations of 2GBI in Hv1.
 # Usage: vmd -e file.tcl -args pose_dirs.txt npt01.dcd
+# Notes on usage:
+#   - The text file should have a list of pose subdirectories inside `tdir`.
+#   - The coordinate file is loaded for each of the poses (e.g., npt01 traj, npt03 coor file).
+#   - Arguments are optional. Don't include any if you just want to view one mol.
+#   - How to view just one mol: (TODO)
+#
 
 ### Num:  to view one config, use no arguments. Else see example usage.
 ### Taut: specify set taut1 0 for false (aka taut2) or 1 for true.
@@ -9,25 +15,21 @@
 #                     [lipid]  for seeing the membrane/POPC 149
 #                     default for the standard black
 
-set taut1 1
-#set t1dir /pub/limvt/hv1/02_configs/1_tautomer
-#set t1dir /pub/limvt/hv1/02_configs/3_noRogueLip-t1
-#set t1dir /pub/limvt/hv1/02_configs/3_noRogueLip-t1/manualdock
-#set t1dir /pub/limvt/hv1/07_rotateF182/withF2A/
-#set t1dir /beegfs/DATA/mobley/limvt/hv1/hpcscratchwork/1_tautomer
-set t1dir /beegfs/DATA/mobley/limvt/hv1/hpcscratchwork/3_noRogueLip-t1
-#set t1dir /home/victoria/Documents/hv1/02_configs/3_noRogueLip-t1
-#set t1dir /home/limvt/connect/hpc/goto-pub/hv1/02_configs/1_tautomer
+set taut 2
+set tdir /dfs3/pub/limvt/hv1/02_configs/2_tautomer
+#set tdir /pub/limvt/hv1/02_configs/1_tautomer
+#set tdir /home/limvt/connect/hpc/goto-pub/hv1/02_configs/1_tautomer
 
 
-#set view four      ;# residues expected to bind 2gbi
+set view pose      ;# just 2GBI, colored by pose
+#set view four     ;# residues expected to bind 2gbi
 #set view hbonds   ;# hbond network close to 2gbi
 #set view lipid    ;# carbonyls and hv1
-set view lipid2   ;# lower carbonyls with plane
+#set view lipid2   ;# lower carbonyls with plane
 
 set frame1 0
-#set frame2 0
-set frame2 -1
+set frame2 0
+#set frame2 -1
 #set frame2 2754
 #set frame1 2504
 #set frame2 2504
@@ -35,17 +37,17 @@ set frame2 -1
 # load files into a single mol
 set commonPSF 0
 #set commonPSF 1
-#set psf /pub/limvt/hv1/07_rotateF182/01_setup/hHv1_t1f_npt10.psf
-set psf /pub/limvt/hv1/07_rotateF182/01_setup/pose17_F150A.psf
+#set mypsf /pub/limvt/hv1/07_rotateF182/01_setup/hHv1_t1f_npt10.psf
+set mypsf /pub/limvt/hv1/07_rotateF182/01_setup/pose17_F150A.psf
 
 # ==========================================
 
-if {$taut1} {
+if {$taut == 1} {
     set lig GBI1
-    cd $t1dir
-} else {
+} elseif {$taut == 2} {
     set lig GBI2
 }
+cd $tdir
 
 display projection Orthographic
 display depthcue off
@@ -76,10 +78,10 @@ foreach pose $dirs {
 
     # load files into a new mol each
     if {! $commonPSF} {
-        set psf [glob *psf]
-        mol new $psf type {psf} first 0 last -1 step 1 waitfor all
+        set mypsf [glob *psf]
+        mol new $mypsf type {psf} first 0 last -1 step 1 waitfor all
     } elseif {$commonPSF && $count == 0} {
-        mol new $psf type {psf} first 0 last -1 step 1 waitfor all
+        mol new $mypsf type {psf} first 0 last -1 step 1 waitfor all
         set origRep 1
     } else {
         set count 0
@@ -369,12 +371,40 @@ foreach pose $dirs {
         mol modcolor 9 $count Name
 
         # hide displays for ease of viewing
-        mol off $count           ;# don't display anything to start
-#        mol showrep $count 1 0   ;# don't show protein
-        mol showrep $count 6 0   ;#
-        mol showrep $count 7 0   ;#
-        mol showrep $count 8 0   ;# don't show overlapping stuff
-        mol showrep $count 9 0   ;#
+        #mol off $count           ;# don't display anything to start
+        mol showrep $count 1 0   ;# don't show protein
+        mol showrep $count 6 0   ;# don't show resid 182
+        mol showrep $count 7 0   ;# don't show resid 185
+        mol showrep $count 8 0   ;# don't show 2GBI close environment
+        mol showrep $count 9 0   ;# don't show lipid 149
+        display resetview
+
+    } elseif {$view == "pose"} {
+
+        color Display Background white
+
+        # add representation for file with GBI only
+        mol modselect 0 $count resname $lig
+        mol modstyle 0 $count Licorice
+        mol modcolor 0 $count Molecule
+
+        # add representation for protein
+        mol addrep $count
+        mol modselect 1 $count protein
+        mol modstyle 1 $count NewCartoon
+        mol modcolor 1 $count ColorID 0
+        mol modmaterial 1 $count Transparent
+
+        # add representation for overlapping with 2GBI
+        mol addrep $count
+        mol modselect 2 $count "not resname $lig and within 3 of resname $lig"
+        mol modstyle 2 $count Licorice 0.300000 12.000000 12.000000
+        mol modcolor 2 $count ColorID 1
+
+        # hide displays for ease of viewing
+        #mol off $count           ;# don't display anything to start
+        mol showrep $count 1 0   ;# don't show protein
+        mol showrep $count 2 0   ;# don't show 2GBI close environment
         display resetview
 
     }
@@ -382,9 +412,9 @@ foreach pose $dirs {
 
     incr count
 
-    if {$taut1} {
+    if {$taut == 1} {
         cd ../
-    } else {
+    } elseif {$taut == 2} {
         cd ../../
     }
 }
