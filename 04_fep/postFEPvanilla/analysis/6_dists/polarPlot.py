@@ -58,24 +58,33 @@ def polarHist(filename, filelist=[], bins_number=72):
     width = 2 * np.pi / bins_number
     # histogram data into equally-sized bins and get n=values of bins
     n, _, _ = plt.hist(angles, bins)
+
     # repeat with filelist if not empty
     nlist = []
     for f in filelist:
         _, angles = load_file(f)
         x, _, _ = plt.hist(angles, bins)
         nlist.append(x)
+
     # replot the histograms to center bins (e.g., center at 0 instead of start at 0)
     plt.clf()
     ax = plt.subplot(111, projection='polar')
     colors = mpl.cm.Set1(np.linspace(0, 1, 10))
+    # IF you have a single histogram & want a diff color, chg index of colors[]
     bars = ax.bar(bins[:bins_number], n, width=width, bottom=0.0,color=colors[0])
     for bar in bars:
         bar.set_alpha(0.5)
+
     # repeat with filelist if not empty
     for i, f in enumerate(filelist):
         bars = ax.bar(bins[:bins_number], nlist[i], width=width, bottom=0.0, color=colors[i+1])
         for bar in bars:
             bar.set_alpha(0.5)
+    # IF you want to change the histogram range, do so here
+    ax.set_ylim(0,50)
+
+    for xtick in ax.get_xticklabels():
+        xtick.set_fontsize(18)
     plt.show()
 
 
@@ -92,7 +101,8 @@ if __name__ == "__main__":
                         help="NAMD fepout file, from which dE values are used"
                              " to color scatter plot markers.")
     parser.add_argument("-s", "--fepskip", type=int, default=10,
-                        help="Take every Nth point of .fepout data.")
+                        help="Take every Nth point of .fepout data. "
+                             "Specify 1 to use every data point.")
     parser.add_argument("--hist", action="store_true", default=False,
                         help="")
     parser.add_argument("--time", action="store_true", default=False,
