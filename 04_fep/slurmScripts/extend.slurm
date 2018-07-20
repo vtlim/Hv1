@@ -1,11 +1,14 @@
 #!/bin/bash
 
+# ========================================================================
 # SUBMIT THIS SCRIPT INSIDE THE FEP_*/ DIRECTORY CONTAINING LAMBDA WINDOWS
+# ========================================================================
+# /beegfs/DATA/mobley/limvt/hv1/github/04_fep/slurmScripts/extend.slurm
 # Change array number to submit individual jobs.
 # If you plan to change margin (or other) do so manually in *.inp file first.
 
-#SBATCH --job-name="t0_f3_fwd"
-#SBATCH --array=01
+#SBATCH --job-name="t0_r2s_fwd-01"
+#SBATCH --array=12,21
 #SBATCH --partition=mf_nes2.8
 # SBATCH --depend=afterany:6403000
 
@@ -91,18 +94,18 @@ fi
 echo "Last timestep: $step"
 
 # Adjust input file to restart FEP from checkpoint
-cp $fname.inp $fname-cpt.inp
-sed -i "s/$fname/$fname-cpt/"               $fname-cpt.inp # outfile name* b4 input
-sed -i "/set binfile/d"                     $fname-cpt.inp # remove old inputname
-sed -i "1iset binfile            $fname"    $fname-cpt.inp # set new input
-#sed -i -e "s/#firsttimestep/firsttimestep $step/" $fname-cpt.inp # set firsttimestep, not allowed for fep
-sed -i "s/temperature\t/\#temperature\t/"   $fname-cpt.inp # comment temperature* \t
-sed -i "s/#bincoordinates/bincoordinates/"  $fname-cpt.inp # use binary coordinates
-sed -i "s/#binvelocities/binvelocities/"    $fname-cpt.inp # use binary velocities
-sed -i "s/#extendedSystem/extendedSystem/"  $fname-cpt.inp # use periodic cell
-sed -i "s/cellBasis/\#cellBasis/"            $fname-cpt.inp # comment cell sizes
-sed -i "s/cellOrigin/\#cellOrigin/"          $fname-cpt.inp # comment cell origin
-sed -i "s/alchEquil/\#alchEquil/"            $fname-cpt.inp # comment FEP Equil steps
+cp $fname.inp $fname-cpt01.inp
+sed -i "s/$fname/$fname-cpt01/"             $fname-cpt01.inp # outfile name* b4 input
+sed -i "/set binfile/d"                     $fname-cpt01.inp # remove old inputname
+sed -i "1iset binfile            $fname"    $fname-cpt01.inp # set new input
+#sed -i -e "s/#firsttimestep/firsttimestep $step/" $fname-cpt01.inp # set firsttimestep, not allowed for fep
+sed -i "s/temperature\t/\#temperature\t/"   $fname-cpt01.inp # comment temperature* \t
+sed -i "s/#bincoordinates/bincoordinates/"  $fname-cpt01.inp # use binary coordinates
+sed -i "s/#binvelocities/binvelocities/"    $fname-cpt01.inp # use binary velocities
+sed -i "s/#extendedSystem/extendedSystem/"  $fname-cpt01.inp # use periodic cell
+sed -i "s/cellBasis/\#cellBasis/"           $fname-cpt01.inp # comment cell sizes
+sed -i "s/cellOrigin/\#cellOrigin/"         $fname-cpt01.inp # comment cell origin
+sed -i "s/alchEquil/\#alchEquil/"           $fname-cpt01.inp # comment FEP Equil steps
         
 # Evaluate remaining FEP steps
 fepline=$( tail -n 5 "$fname.inp" | grep "runFEP" )
@@ -121,15 +124,15 @@ fi
 printf "Remaining FEP steps: $remstep\n\n"
 
 # Grep old command and convert * spaces to one space each to get lambda values
-start_stop_chg=$(grep runFEPmin $fname-cpt.inp | tr -s ' ' | cut -d ' ' -f2-4)
+start_stop_chg=$(grep runFEPmin $fname-cpt01.inp | tr -s ' ' | cut -d ' ' -f2-4)
 
 # Delete old runFEPmin command and comment
-sed -i "/runFEPmin/d" $fname-cpt.inp
-sed -i "/dLambda/d" $fname-cpt.inp
+sed -i "/runFEPmin/d" $fname-cpt01.inp
+sed -i "/dLambda/d" $fname-cpt01.inp
 
 # Compile new runFEP command, and add new comment
-echo "runFEP $start_stop_chg $remstep" >> $fname-cpt.inp
-echo "#      start stop dLambda nSteps" >> $fname-cpt.inp
+echo "runFEP $start_stop_chg $remstep" >> $fname-cpt01.inp
+echo "#      start stop dLambda nSteps" >> $fname-cpt01.inp
      
 # Submit FEP run
 rm FFTW_NAMD*txt
@@ -138,7 +141,7 @@ cpt=$SLURM_CPUS_PER_TASK
 
 
 srun --propagate=STACK --cpu_bind=v,sockets --cpus-per-task=$cpt \
-     namd2 ++ppn $((cpt-1)) +isomalloc_sync $fname-cpt.inp > $fname-cpt.log
+     namd2 ++ppn $((cpt-1)) +isomalloc_sync $fname-cpt01.inp > $fname-cpt01.log
 cd ..
 
 echo "End Time:$( date )"
