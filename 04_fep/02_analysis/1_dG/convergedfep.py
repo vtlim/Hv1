@@ -8,6 +8,7 @@
 import numpy as np
 import argparse
 import re, os, glob
+import subprocess
 
 def numericalSort(value):
     """
@@ -23,6 +24,14 @@ def numericalSort(value):
 def tail( f, lines ):
     """
     https://stackoverflow.com/questions/136168/get-last-n-lines-of-a-file-with-python-similar-to-tail
+
+    Parameters
+    ----------
+    f : opened file object
+        This is not the name of the file, but the object returned from Python open().
+    lines : integer
+        Number of lines desired from the tail end of the file.
+
     """
 
     if lines == 0:
@@ -55,7 +64,20 @@ def tail( f, lines ):
 
     return ''.join(data).splitlines()[-lines:]
 
-def shorten_cat_fepout(fep_dir, fepout_length, equil_length, outfile, num_blocks, cur_block):
+
+def grab( f, lines, start ):
+    """
+    """
+
+    if lines == 0:
+        return []
+    wholelines = f.readlines()
+    finish = start+lines+1
+
+    return wholelines[start:finish]
+
+
+def shorten_cat_fepout(fep_dir, fepout_length, equil_length, outfile, num_blocks, cur_block, isolated):
 
     # calculate how many lines of data contribute to ensemble average data
     data_length = fepout_length - equil_length
@@ -71,12 +93,31 @@ def shorten_cat_fepout(fep_dir, fepout_length, equil_length, outfile, num_blocks
     with open(outfile, 'w') as output:
         print('Concatenating {}'.format(outfile))
         for fname in fep_file:
-            if lines_wanted < data_length:
-                output.write("#STARTING\n") # to be compatible with bar4fep.py
-            f = open(fname, "rb")
-            extracted_lines = tail(f, lines_wanted)
-            for i in extracted_lines:
-                output.write("{}\n".format(i))
+
+            if not isolated:
+                f = open(fname, "rb")
+                # calculate number of lines to keep
+                lines_wanted = int((fepout_length/num_blocks)*cur_block)
+                if lines_wanted < data_length:
+                    output.write("#0 STEPS OF EQUILIBRATION AT LAMBDA 0.0 COMPLETED\n") # compatible with VMD parse FEP
+                    output.write("#STARTING\n") # to be compatible with bar4fep.py
+                print("Extracting {} lines".format(lines_wanted))
+                extracted_lines = tail(f, lines_wanted)
+                for i in extracted_lines:
+                    output.write("{}\n".format(i))
+            else:
+                f = open(fname, "r")
+                # calculate number of lines to keep
+                lines_wanted = int(fepout_length/num_blocks)
+                start_line = int((num_blocks-cur_block)*lines_wanted+4) # 4 is approximate <===== MAKE MORE APPLICABLE
+                if lines_wanted < data_length:
+                    output.write("#0 STEPS OF EQUILIBRATION AT LAMBDA 0.0 COMPLETED\n") # compatible with VMD parse FEP
+                    output.write("#STARTING\n") # to be compatible with bar4fep.py
+                print("Extracting {} lines".format(lines_wanted))
+                extracted_lines = grab(f, lines_wanted, start_line)
+                for i in extracted_lines:
+                    output.write("{}".format(i))
+                output.write("#Free energy change for lambda window [ 0 0 ] is 0.0 ; net change until now is 0.0\n") # compatible with VMD parse FEP
 
     return outfile
 
@@ -101,7 +142,7 @@ def convergedfep(way, **kwargs):
             print("!!! WARNING: {} already exists".format(newfile))
         elif os.path.exists(hdir) == True:
             if not os.path.exists("{:02}".format(i)): os.mkdir("{:02}".format(i))
-            shorten_cat_fepout(hdir, args.feplength, args.equlength, newfile, args.numblocks, i)
+            shorten_cat_fepout(hdir, args.feplength, args.equlength, newfile, args.numblocks, i, args.isolated)
         else:
             print(os.getcwd())
             raise OSError("No such file or directory '{}'".format(hdir))
@@ -126,6 +167,12 @@ if __name__ == "__main__":
                              "This value should include the header saying "
                              "\"STARTING COLLECTION OF...\" Default is set at "
                              "504, for a 1 ns equil with output freq 1000.")
+    parser.add_argument("--isolated", default=False, action='store_true',
+                        help="If output file is broken into N chunks, do you "
+                             "want to grab the last 1, 2, 3, etc. chunks "
+                             "(isolated=False) or do you want to be able to "
+                             "grab chunk 3 without grabbing 1 and 2? (isolated"
+                             " = True)")
 
     args = parser.parse_args()
     opt = vars(args)
