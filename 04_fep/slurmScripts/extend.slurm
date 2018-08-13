@@ -7,8 +7,8 @@
 # Change array number to submit individual jobs.
 # If you plan to change margin (or other) do so manually in *.inp file first.
 
-#SBATCH --job-name="t0_r2s_fwd-01"
-#SBATCH --array=12,21
+#SBATCH --job-name="t0_s2r_rev"
+#SBATCH --array=1-40
 #SBATCH --partition=mf_nes2.8
 # SBATCH --depend=afterany:6403000
 
