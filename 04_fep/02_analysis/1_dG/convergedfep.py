@@ -2,8 +2,14 @@
 # Purpose:  Concatenate all the windows' fepout files, but only take last bit from each.
 # Usage:    python convergedfep.py -d [/path/to/FEP-F/and/FEP-R] -n [num_blocks]
 # Example:  python convergedfep.py -d ../../../ -n 10
-
 # Where: /beegfs/DATA/mobley/limvt/hv1/04_fep/analysis/1_dG/convergedfep.py
+#
+# Notes:
+#   - If you plan to use a different directory other than FEP_*/results for the
+#     .fepout files, MAKE SURE TO CHANGE THAT IN THIS SCRIPT. For example,
+#     you may want to evaluate the extended jobs in FEP_*/results-10ns.
+#
+
 
 import numpy as np
 import argparse
@@ -77,7 +83,19 @@ def grab( f, lines, start ):
     return wholelines[start:finish]
 
 
-def shorten_cat_fepout(fep_dir, fepout_length, equil_length, outfile, num_blocks, cur_block, isolated):
+def shorten_cat_fepout(fep_dir, fepout_length, equil_length, outfile, num_blocks, cur_block, frombeg, isolated):
+
+    def write_file(fobj, lines, binary=False):
+
+        # write out the extracted lines
+        if binary:
+            for i in lines:
+                fobj.write("{}\n".format(i))
+        else:
+            for i in lines:
+                fobj.write("{}".format(i))
+
+
 
     # calculate how many lines of data contribute to ensemble average data
     data_length = fepout_length - equil_length
@@ -94,30 +112,44 @@ def shorten_cat_fepout(fep_dir, fepout_length, equil_length, outfile, num_blocks
         print('Concatenating {}'.format(outfile))
         for fname in fep_file:
 
-            if not isolated:
-                f = open(fname, "rb")
+            if isolated:
+                if frombeg:    # from beginning, by blocks
+                    # todo
+                    pass
+                else:          # from end, by blocks
+                    f = open(fname, "r")
+                    # calculate number of lines to keep
+                    lines_wanted = int(fepout_length/num_blocks)
+                    start_line = int((num_blocks-cur_block)*lines_wanted+4) # 4 is approximate <===== MAKE MORE APPLICABLE
+                    if lines_wanted < data_length:
+                        output.write("#0 STEPS OF EQUILIBRATION AT LAMBDA 0.0 COMPLETED\n") # compatible with VMD parse FEP
+                        output.write("#STARTING\n") # to be compatible with bar4fep.py
+                    print("Extracting {} lines".format(lines_wanted))
+                    extracted_lines = grab(f, lines_wanted, start_line)
+                    write_file(output, extracted_lines, False)
+                    if lines_wanted < fepout_length:
+                        output.write("#Free energy change for lambda window [ 0 0 ] is 0.0 ; net change until now is 0.0\n") # compatible with VMD parse FEP
+
+
+            else:
                 # calculate number of lines to keep
                 lines_wanted = int((fepout_length/num_blocks)*cur_block)
-                if lines_wanted < data_length:
-                    output.write("#0 STEPS OF EQUILIBRATION AT LAMBDA 0.0 COMPLETED\n") # compatible with VMD parse FEP
-                    output.write("#STARTING\n") # to be compatible with bar4fep.py
                 print("Extracting {} lines".format(lines_wanted))
-                extracted_lines = tail(f, lines_wanted)
-                for i in extracted_lines:
-                    output.write("{}\n".format(i))
-            else:
-                f = open(fname, "r")
-                # calculate number of lines to keep
-                lines_wanted = int(fepout_length/num_blocks)
-                start_line = int((num_blocks-cur_block)*lines_wanted+4) # 4 is approximate <===== MAKE MORE APPLICABLE
-                if lines_wanted < data_length:
-                    output.write("#0 STEPS OF EQUILIBRATION AT LAMBDA 0.0 COMPLETED\n") # compatible with VMD parse FEP
-                    output.write("#STARTING\n") # to be compatible with bar4fep.py
-                print("Extracting {} lines".format(lines_wanted))
-                extracted_lines = grab(f, lines_wanted, start_line)
-                for i in extracted_lines:
-                    output.write("{}".format(i))
-                output.write("#Free energy change for lambda window [ 0 0 ] is 0.0 ; net change until now is 0.0\n") # compatible with VMD parse FEP
+
+                if frombeg:    # from beginning, inclusive chunks
+                    with open(fname) as f:
+                        extracted_lines = [next(f) for x in range(lines_wanted)]
+                    write_file(output, extracted_lines, False)
+                    if lines_wanted < fepout_length:
+                        output.write("#Free energy change for lambda window [ 0 0 ] is 0.0 ; net change until now is 0.0\n") # compatible with VMD parse FEP
+
+                else:           # from end, inclusive chunks
+                    f = open(fname, "rb")
+                    if lines_wanted < data_length:
+                        output.write("#0 STEPS OF EQUILIBRATION AT LAMBDA 0.0 COMPLETED\n") # compatible with VMD parse FEP
+                        output.write("#STARTING\n") # to be compatible with bar4fep.py
+                    extracted_lines = tail(f, lines_wanted)
+                    write_file(output, extracted_lines, True)
 
     return outfile
 
@@ -142,7 +174,7 @@ def convergedfep(way, **kwargs):
             print("!!! WARNING: {} already exists".format(newfile))
         elif os.path.exists(hdir) == True:
             if not os.path.exists("{:02}".format(i)): os.mkdir("{:02}".format(i))
-            shorten_cat_fepout(hdir, args.feplength, args.equlength, newfile, args.numblocks, i, args.isolated)
+            shorten_cat_fepout(hdir, args.feplength, args.equlength, newfile, args.numblocks, i, args.frombeg, args.isolated)
         else:
             print(os.getcwd())
             raise OSError("No such file or directory '{}'".format(hdir))
@@ -167,9 +199,13 @@ if __name__ == "__main__":
                              "This value should include the header saying "
                              "\"STARTING COLLECTION OF...\" Default is set at "
                              "504, for a 1 ns equil with output freq 1000.")
+    parser.add_argument("--frombeg", default=False, action='store_true',
+                        help="Do you want to evaluate convergence by taking "
+                             "successive amounts of data from the end "
+                             "(frombeg=False) or from the beginning (frombeg=True)?")
     parser.add_argument("--isolated", default=False, action='store_true',
                         help="If output file is broken into N chunks, do you "
-                             "want to grab the last 1, 2, 3, etc. chunks "
+                             "want to grab the last 1, 1-2, 1-3, etc. chunks "
                              "(isolated=False) or do you want to be able to "
                              "grab chunk 3 without grabbing 1 and 2? (isolated"
                              " = True)")
