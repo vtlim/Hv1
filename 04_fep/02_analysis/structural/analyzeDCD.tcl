@@ -51,7 +51,7 @@ proc align_backbone { {refmolid 0} } {
     # Align Hv1 protein by backbone of transmembrane regions.
     # All frames with molid of 0 will be aligned. The reference
     # can either be frame 0 of molid 0, or a different molid.
-    # Used in functions: calc_rmsd_hv1, calc_rmsf_hv1, count_wat_z.
+    # Used in functions: calc_rmsd_hv1, calc_rmsf_hv1, count_wat_z
     #
     # Arguments
     #  - refmolid : int
@@ -347,6 +347,75 @@ proc count_wat_z { outfile pre_z0 pre_z1 {inpdb ""} } {
 } ;# end of count_wat_z
 
 
+proc count_wat_near { outfile dist args } {
+    # ============================================================
+    # Count number of waters within $dist Angstroms of the input selection(s).
+    # Specify selection with no spaces, but use commas for multiple words.
+    # See example usage.
+    #
+    # Arguments
+    #  - outfile : string
+    #      Name of the output file.
+    #  - dist : integer
+    #      Number of Angstroms from selection to find waters.
+    #  - inpdb : string(s)
+    #      Variable number of VMD selections for which to count waters within $dist cutoff.
+    #      Each selection is analyzed separately.
+    # Returns
+    #  - (nothing)
+    # Example usage
+    #  - count_wat_near waters-near-selections.dat 3 sidechain,and,resid,211 resname,GBI1
+    # Notes
+    #  - To specify selection, separate words with commas, not spaces. ex: protein,and,resid,112
+    #  - Built and validated from ligCloseWat.tcl in postFEPvanilla analysis scripts (08-23-18)
+    # ============================================================
+    global inpsf
+    global inskip
+    global inpdb
+    global dcdlist
+
+    # translate the comma arglist to spaced vmd selections
+    for {set i 0} {$i < [llength $args]} {incr i} {
+       set prelig [lindex $args $i]
+       lappend sellist [split $prelig {,}]
+    }
+
+    # wrap and ignore given pdb -- sometimes has error (a=0.000000 b=0.000000 c=0.000000)
+    # this function DOES NOT ALIGN bc it calculates distances in each frame independently
+    set n [molinfo 0 get numframes]
+    pbc wrap -molid 0 -compound fragment -center com -centersel "protein" -first 1 -last $n ;# zero-based index
+
+    # define output file
+    set outDataFile [open $outfile w]
+    #puts $outDataFile "# Number of waters (noh) within $dist Angstroms"
+    puts $outDataFile "# Number of waters within $dist Angstroms"
+    puts $outDataFile "# Input PSF: $inpsf\n# Input DCD, skip $inskip: $dcdlist\n"
+    set header "# Frame"
+    for {set i 0} {$i < [llength $sellist]} {incr i} {
+        puts $outDataFile "# Selection $i: [lindex $sellist $i]"
+        append header "\t$i"
+    }
+    puts $outDataFile "\n$header"
+
+    # waters calculation
+    puts "Counting waters..."
+    set num_steps [molinfo 0 get numframes]
+    for {set frame 0} {$frame < $num_steps} {incr frame} {
+        if {[expr $frame % 100 == 0]} {puts $frame}
+        set curr_line "$frame\t"
+        foreach x $sellist {
+            #set cw [atomselect 0 "water and oxygen within $dist of ($x and noh)" frame $frame]
+            set cw [atomselect 0 "water and within $dist of $x" frame $frame]
+            set num [$cw num]
+            append curr_line "\t$num"
+        }
+        puts $outDataFile $curr_line
+    }
+    close $outDataFile
+
+} ;# end of count_wat_near
+
+
 proc calc_dist { outfile pre0 pre1 {pre2 ""} {pre3 ""} } {
     # ============================================================
     # Measure distance of selection 1 to selection[2,3,...].
@@ -434,14 +503,14 @@ proc calc_dens_wat { {presel ""} {outfile "watdens"} } {
     # Returns
     #  - (nothing)
     # Example usage
-    #  - calc_dens_wat name,OH2,and,within,10,of,(protein,and,resid,112,185,211) watdens_nearSel.dx
-    #  - calc_dens_wat name,OH2,and,within,10,of,protein watdens.dx
+    #  - calc_dens_wat name,OH2,and,within,10,of,(protein,and,resid,112,185,211) watdens_nearSel
+    #  - calc_dens_wat name,OH2,and,within,10,of,protein watdens
     #  - calc_dens_wat name,OH2,and,within,10,of,protein
     #  - calc_dens_wat
     # Notes
     #  - Only feed this function WRAPPED TRAJECTORIES. Wrapping the traj before calling volmap in this function
     #    doesn't work since the density doesn't align with the simulation (e.g., water slabs are out of range
-    #    of the density map).
+    #    of the density map). (see sumtraj.tcl script like used for nodes/edges analysis)
     #  - If you get error: "measure center: bad weight sum, would cause divide by zero", double check selection language.
     #  - To specify selection, separate words with commas, not spaces. ex: protein,and,resid,112
     # ============================================================
@@ -465,7 +534,7 @@ proc calc_dens_wat { {presel ""} {outfile "watdens"} } {
 
     # generate the volumetric map
     puts "Counting waters..."
-    volmap density $wat -allframes -combine avg -res 1 -mol $moltop -o $outfile.dx -weight mass
+    volmap density $wat -allframes -combine avg -res 0.25 -mol $moltop -o $outfile.dx -weight mass
 
     # write out corresponding psf/pdb of wrapped traj view with dx
     animate write pdb $outfile.pdb beg 0 end 0 sel [atomselect $moltop all]
