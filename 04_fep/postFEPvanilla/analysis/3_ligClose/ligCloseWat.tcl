@@ -18,7 +18,7 @@ for {set i 2} {$i < $argc} {incr i} {
 }
 
 # TEMP until this function is moved into analyzeDCD.tcl
-set inskip ""
+set inskip 1
 set inpdb ""
 
 # =============================================================== #
@@ -67,6 +67,7 @@ proc count_wat_near { outfile {dist 4} args } {
     # define output file
     set outDataFile [open $outfile w]
     puts $outDataFile "# Number of waters (noh) within $dist Angstroms"
+    #puts $outDataFile "# Number of waters within $dist Angstroms"
     puts $outDataFile "# Input PSF: $inpsf\n# Input DCD, skip $inskip: $dcdlist\n"
     set header "# Frame"
     for {set i 0} {$i < [llength $args]} {incr i} {
@@ -83,6 +84,7 @@ proc count_wat_near { outfile {dist 4} args } {
         set curr_line "$frame\t"
         foreach x $args {
             set cw [atomselect 0 "water and oxygen within $dist of ($x and noh)" frame $frame]
+            #set cw [atomselect 0 "water and within $dist of $x" frame $frame]
             set num [$cw num]
             append curr_line "\t$num"
         }
@@ -93,8 +95,9 @@ proc count_wat_near { outfile {dist 4} args } {
 
 # load files
 mol new $inpsf
-mol addfile $dcdlist type {dcd} first 0 last -1 step 10 waitfor -1
+mol addfile $dcdlist type {dcd} first 0 last -1 step $inskip waitfor -1
 pbc wrap -compound fragment -center com -centersel "protein" -all
 
-count_wat_near waters-near-selections.dat 4 $sellist
+count_wat_near waters-near-selections.dat 3 $sellist
 
+exit
