@@ -35,6 +35,7 @@ foreach dcd $dcdlist {    ;# maybe alter the first step to read in if FEP bc 50 
 # =============================================================== #
 
 package require pbctools
+package require hbonds
 set __before [info procs] ; # get list of avail functions before loading this script
 
 
@@ -388,7 +389,7 @@ proc count_wat_near { outfile dist args } {
     # define output file
     set outDataFile [open $outfile w]
     #puts $outDataFile "# Number of waters (noh) within $dist Angstroms"
-    puts $outDataFile "# Number of waters within $dist Angstroms"
+    puts $outDataFile "# Number of waters (noh) within $dist Angstroms"
     puts $outDataFile "# Input PSF: $inpsf\n# Input DCD, skip $inskip: $dcdlist\n"
     set header "# Frame"
     for {set i 0} {$i < [llength $sellist]} {incr i} {
@@ -404,8 +405,8 @@ proc count_wat_near { outfile dist args } {
         if {[expr $frame % 100 == 0]} {puts $frame}
         set curr_line "$frame\t"
         foreach x $sellist {
-            #set cw [atomselect 0 "water and oxygen within $dist of ($x and noh)" frame $frame]
-            set cw [atomselect 0 "water and within $dist of $x" frame $frame]
+            #set cw [atomselect 0 "noh and water within $dist of ($x and noh)" frame $frame]
+            set cw [atomselect 0 "noh and water within $dist of $x" frame $frame]
             set num [$cw num]
             append curr_line "\t$num"
         }
@@ -414,6 +415,52 @@ proc count_wat_near { outfile dist args } {
     close $outDataFile
 
 } ;# end of count_wat_near
+
+
+proc count_hbonds { pre_sel2 {pre_sel1 "protein,or,water"} } {
+    # ============================================================
+    # Quantify number of hbonds from $pre_sel1 to $pre_sel2.
+    # Specify selection with no spaces, but use commas for multiple words.
+    # See example usage.
+    #
+    # Arguments
+    #  - pre_sel2 : string
+    #      VMD selection
+    #  - pre_sel1 : string
+    #      VMD selection. Default is "protein or water".
+    # Returns
+    #  - (nothing)
+    # Example usage
+    #  - count_hbonds protein,and,resid,211
+    # Notes
+    #  - To specify selection, separate words with commas, not spaces. ex: protein,and,resid,112
+    # ============================================================
+    global inpsf
+    global inskip
+    global inpdb
+    global dcdlist
+
+    # translate the comma selection phrase to spaced vmd selections
+    set sel1 [split $pre_sel1 {,}]
+    set sel2 [split $pre_sel2 {,}]
+
+    # wrap and ignore given pdb -- sometimes has error (a=0.000000 b=0.000000 c=0.000000)
+    # this function DOES NOT ALIGN bc it calculates distances in each frame independently
+    set n [molinfo 0 get numframes]
+    pbc wrap -molid 0 -compound fragment -center com -centersel "protein" -first 1 -last $n ;# zero-based index
+
+    # evaluate hbonds
+    hbonds -sel1 [atomselect 0 "$sel1"] -sel2 [atomselect 0 "$sel2"] -writefile yes -upsel yes -frames all -dist 3.5 -ang 40 -plot yes -log hbondsProtWat.log -writefile yes -outfile hbondsProtWat.dat -polar yes -DA both -type unique -detailout hbondsProtWat-details.dat
+
+    # append trajectory information to output
+    set outDataFile [open hbondsProtWat.log a]
+    puts $outDataFile "\n# Input PSF: $inpsf\n# Input DCD, skip $inskip: $dcdlist"
+    puts $outDataFile "# Selection 1: $sel1"
+    puts $outDataFile "# Selection 2: $sel2\n"
+    close $outDataFile
+
+
+} ;# end of count_hbonds
 
 
 proc calc_dist { outfile pre0 pre1 {pre2 ""} {pre3 ""} } {
