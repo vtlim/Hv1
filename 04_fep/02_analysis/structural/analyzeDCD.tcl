@@ -96,14 +96,14 @@ proc diff {before after} {
 } ;# end of diff
 
 
-proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} {inpdb ""} } {
+proc calc_rmsd_hv1 {outprefix {level segment} {gbi 0} {inpdb ""} } {
     # ============================================================
     # Measure RMSD for Hv1. System is aligned by transmembrane
     # backbone, then RMSD can be calculated over backbone,
     # each segment (S1-S4), or each residue.
     #
     # Arguments
-    #  - outfile : string
+    #  - outprefix : string
     #       Basename of the output files for .dat, .psf, .pdb
     #  - level : string
     #       Level of detail to get RMSD values. Options: backbone, segment, residue
@@ -163,7 +163,7 @@ proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} {inpdb ""} } {
     }
 
     # open file for writing output
-    set outDataFile [open $outfile.dat w]
+    set outDataFile [open $outprefix.dat w]
     puts $outDataFile "# Data from files:\n#  $inpsf\n#  $dcdlist"
     puts $outDataFile "# Alignment reference: $inpdb\n"
     puts $outDataFile "# RMSD (Angstroms)"
@@ -201,14 +201,14 @@ proc calc_rmsd_hv1 {outfile {level segment} {gbi 0} {inpdb ""} } {
 } ;# end of calc_rmsd_hv1
 
 
-proc calc_rmsf_hv1 {outfile} {
+proc calc_rmsf_hv1 {outprefix} {
     # ============================================================
     # Measure RMSF by residue for Hv1. VMD cannot measure RMSF for
     # group of atoms, so each residue uses dummy atom that is the
     # center of mass of the amino acid (with backbone, no hydrogens)
     #
     # Arguments
-    #  - outfile : string
+    #  - outprefix : string
     #       Basename of the output files for .dat, .psf, .pdb
     # Returns
     #  - (nothing)
@@ -223,7 +223,7 @@ proc calc_rmsf_hv1 {outfile} {
     global dcdlist
 
     # open file for writing output
-    set outDataFile [open $outfile.dat w]
+    set outDataFile [open $outprefix.dat w]
     puts $outDataFile "# Data from files:\n#  $inpsf\n#  $dcdlist\n"
     puts $outDataFile "# Res | RMSF (Angstroms)"
 
@@ -262,8 +262,8 @@ proc calc_rmsf_hv1 {outfile} {
     }
 
     # write out rmsf info in occupancy column of a PDB file
-    animate write pdb $outfile.pdb beg 0 end 0 sel [atomselect top protein]
-    animate write psf $outfile.psf beg 0 end 0 sel [atomselect top protein]
+    animate write pdb $outprefix.pdb beg 0 end 0 sel [atomselect top protein]
+    animate write psf $outprefix.psf beg 0 end 0 sel [atomselect top protein]
     close $outDataFile
 
 
@@ -417,7 +417,7 @@ proc count_wat_near { outfile dist args } {
 } ;# end of count_wat_near
 
 
-proc count_hbonds { pre_sel2 {pre_sel1 "protein,or,water"} } {
+proc count_hbonds { pre_sel2 {pre_sel1 "protein,or,water"} {outprefix "hbondsProtWat"} } {
     # ============================================================
     # Quantify number of hbonds from $pre_sel1 to $pre_sel2.
     # Specify selection with no spaces, but use commas for multiple words.
@@ -428,6 +428,9 @@ proc count_hbonds { pre_sel2 {pre_sel1 "protein,or,water"} } {
     #      VMD selection
     #  - pre_sel1 : string
     #      VMD selection. Default is "protein or water".
+    #  - outprefix : string
+    #       Basename of the output files for .dat, -details.dat, .log
+    #       Default is "hbondsProtWat".
     # Returns
     #  - (nothing)
     # Example usage
@@ -450,11 +453,12 @@ proc count_hbonds { pre_sel2 {pre_sel1 "protein,or,water"} } {
     pbc wrap -molid 0 -compound fragment -center com -centersel "protein" -first 1 -last $n ;# zero-based index
 
     # evaluate hbonds
-    hbonds -sel1 [atomselect 0 "$sel1"] -sel2 [atomselect 0 "$sel2"] -writefile yes -upsel yes -frames all -dist 3.5 -ang 40 -plot yes -log hbondsProtWat.log -writefile yes -outfile hbondsProtWat.dat -polar yes -DA both -type unique -detailout hbondsProtWat-details.dat
+    hbonds -sel1 [atomselect 0 "$sel1"] -sel2 [atomselect 0 "$sel2"] -writefile yes -upsel yes -frames all -dist 3.5 -ang 40 -plot yes -log ${outprefix}.log -writefile yes -outfile ${outprefix}.dat -polar yes -DA both -type unique -detailout ${outprefix}-details.dat
 
     # append trajectory information to output
-    set outDataFile [open hbondsProtWat.log a]
+    set outDataFile [open ${outprefix}.log a]
     puts $outDataFile "\n# Input PSF: $inpsf\n# Input DCD, skip $inskip: $dcdlist"
+    puts $outDataFile "# pbc wrap centersel: protein"
     puts $outDataFile "# Selection 1: $sel1"
     puts $outDataFile "# Selection 2: $sel2\n"
     close $outDataFile
@@ -538,14 +542,14 @@ proc calc_dist { outfile pre0 pre1 {pre2 ""} {pre3 ""} } {
 } ;# end of calc_dist
 
 
-proc calc_dens_wat { {presel ""} {outfile "watdens"} } {
+proc calc_dens_wat { {presel ""} {outprefix "watdens"} } {
     # ============================================================
     # Calculate volumetric density of water (or other given selection) over trajectory.
     #
     # Arguments
     #  - presel : string
     #      Selection for reference atom
-    #  - outfile : string
+    #  - outprefix : string
     #       Basename of the output files for dx, psf, pdb. Default is "watdens".
     # Returns
     #  - (nothing)
@@ -581,14 +585,14 @@ proc calc_dens_wat { {presel ""} {outfile "watdens"} } {
 
     # generate the volumetric map
     puts "Counting waters..."
-    volmap density $wat -allframes -combine avg -res 0.25 -mol $moltop -o $outfile.dx -weight mass
+    volmap density $wat -allframes -combine avg -res 0.25 -mol $moltop -o $outprefix.dx -weight mass
 
     # write out corresponding psf/pdb of wrapped traj view with dx
-    animate write pdb $outfile.pdb beg 0 end 0 sel [atomselect $moltop all]
-    animate write psf $outfile.psf beg 0 end 0 sel [atomselect $moltop all]
+    animate write pdb $outprefix.pdb beg 0 end 0 sel [atomselect $moltop all]
+    animate write psf $outprefix.psf beg 0 end 0 sel [atomselect $moltop all]
 
     # append trajectory information to output
-    set outDataFile [open $outfile.dx a]
+    set outDataFile [open $outprefix.dx a]
     puts $outDataFile "# Input PSF: $inpsf\n# Input DCD, skip $inskip: $dcdlist"
     puts $outDataFile "# Density selection: $watsel\n"
     close $outDataFile
