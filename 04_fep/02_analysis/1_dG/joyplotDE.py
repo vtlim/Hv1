@@ -35,6 +35,9 @@ def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=No
         If false, overlap curves like joyplot format.
 
     """
+    def save_and_return():
+        if outname is not None:
+            plt.savefig(outname, bbox_inches='tight')
 
     # Set number of steps to remove for equilibration
     if isinstance(equil_steps, int) and isinstance(data_freq, int):
@@ -61,9 +64,15 @@ def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=No
 
     if nojoy:
         colors = ['b','r']
+        histoptions = {"histtype": "step", "linewidth": 2, "alpha": 1}
         for i in range(len(all_files)):
-            sns.distplot(df.loc[df['label'] == int(i+1)]['work'], color=colors[i], kde=(not hist), hist=hist)
+            sns.distplot(df.loc[df['label'] == int(i+1)]['work'], color=colors[i], kde=(not hist), hist=hist, hist_kws=histoptions)
+        plt.xticks(fontsize=14)
+        plt.yticks(fontsize=14)
+        plt.xlabel("dE (kcal/mol)",fontsize=14)
+        plt.ylabel("normalized probability",fontsize=14)
         plt.show()
+        save_and_return()
         return
 
     # Initialize the FacetGrid object
@@ -98,10 +107,8 @@ def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=No
     g.despine(bottom=True, left=True)
 
     # Show plot
-    if outname is not None:
-        plt.savefig(outname, bbox_inches='tight')
+    save_and_return()
 #    plt.show()
-
 
 if __name__ == "__main__":
     import argparse
