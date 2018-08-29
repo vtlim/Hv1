@@ -71,8 +71,8 @@ def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=No
         plt.yticks(fontsize=14)
         plt.xlabel("dE (kcal/mol)",fontsize=14)
         plt.ylabel("normalized probability",fontsize=14)
-        plt.show()
         save_and_return()
+        plt.show()
         return
 
     # Initialize the FacetGrid object
