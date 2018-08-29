@@ -265,13 +265,20 @@ def hist_plot(w_F, w_R, window_F, window_R, title, outfname):
 
         # create subplot
         plt.subplot(gs[idx])
+
+        # get uniform range for binning
+        xmin=min(min(-1* w_R[kR]),min(w_F[kF]))
+        xmax=max(max(-1* w_R[kR]),max(w_F[kF]))
+
         # plot reverse and forward data for this window
-        plt.hist((-1* w_R[kR] ), bins=100, color='r',histtype='step')
-        plt.hist(w_F[kF], bins=100, color='b', histtype='step')
+        plt.hist((-1* w_R[kR] ), bins=100, range=(xmin, xmax), color='r',histtype='step')
+        plt.hist(w_F[kF], bins=100, range=(xmin, xmax), color='b', histtype='step')
+
         # add title and ticks for this window
         plt.title(sbtitle, fontsize=8, color='g')
         plt.tick_params(axis='both',labelsize=6)
         idx += 1
+
     plt.subplots_adjust(bottom=-1.15,top=1.15,hspace=0.6,wspace=0.3,right=1.3)
     plt.suptitle(title,x=0.7,y=1.3)
 
