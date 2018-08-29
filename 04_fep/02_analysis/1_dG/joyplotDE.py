@@ -3,6 +3,9 @@
 # Adapted from: https://seaborn.pydata.org/examples/kde_joyplot.html
 # By: Victoria Lim
 
+# NOTE: be very careful of histogram option and make sure to manually specify number of bins AND bin range.
+#       otherwise relative amounts will be misleading. (TODO: improve this)
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -11,10 +14,26 @@ sns.set(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
 
 
 
-def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=None, hist=False):
+def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=None, hist=False, nojoy=False):
     """
     all_files : list
-        List of
+
+    inv_files : list
+        List of files whose data should be multiplied by -1 because is reverse work.
+    equil_steps : int
+
+    data_freq : int
+
+    outname : string
+
+    hist : Boolean
+        If true, generate joyplots by blocky histograms.
+        If false, generate joyplots of smoothed KDE plots
+
+    nojoy : Boolean
+        If true, plot all curves on same area.
+        If false, overlap curves like joyplot format.
+
     """
 
     # Set number of steps to remove for equilibration
@@ -26,6 +45,7 @@ def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=No
     # Load and concatenate files into dataframe
     temp = []
     for i, f in enumerate(all_files):
+        print(f)
         d = pd.read_csv(f, delim_whitespace=True, comment='#', header=None, usecols=[6], skiprows=lines_remove)
         if inv_files is not None and f in inv_files:
            d.loc[:,6] *= -1 # the column is named 6 (int) before renaming
@@ -38,6 +58,13 @@ def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=No
     #a_values = df.loc[df['label'] == 1, 'work']
     #a_values.plot(kind='hist')
     #plt.show()
+
+    if nojoy:
+        colors = ['b','r']
+        for i in range(len(all_files)):
+            sns.distplot(df.loc[df['label'] == int(i+1)]['work'], color=colors[i], kde=(not hist), hist=hist)
+        plt.show()
+        return
 
     # Initialize the FacetGrid object
     pal = sns.cubehelix_palette(10, rot=-.25, light=.7)
@@ -90,6 +117,9 @@ if __name__ == "__main__":
                         help="Plot histograms instead of KDE distributions")
     parser.add_argument("-o", "--out",
                         help="Name for which to save plot. Leave blank to not save.")
+    parser.add_argument("--nojoy", action="store_true", default=False,
+                        help="Generate one plot of of all distributions instead"
+                             " of separate plots in joyplot format.")
     # input data
     parser.add_argument("-l", "--filelist", nargs='+', # takes 1+ args
                         help="List of individual window files with FEP output data.")
@@ -100,5 +130,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     opt = vars(args)
 
-    joyplotDE(opt['filelist'], opt['multiply'], opt['equil'], opt['freq'], opt['out'], opt['hist'])
+    joyplotDE(opt['filelist'], opt['multiply'], opt['equil'], opt['freq'], opt['out'], opt['hist'], opt['nojoy'])
 
