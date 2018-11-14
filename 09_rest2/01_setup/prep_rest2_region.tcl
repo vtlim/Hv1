@@ -1,6 +1,6 @@
 
 # Purpose: Prepare PDB file for REST2 simulations
-# Usage: vmdt -e prep_spt.tcl -args input.pdb vmd,atom,selection output.pdb
+# Usage: vmd -dispdev text -e prep_rest2_region.tcl -args input.pdb vmd,atom,selection output.pdb
 
 # read in command line arguments
 set inpdb  [lindex $argv 0]
