@@ -60,10 +60,10 @@ def getWindow(filename, tstart=0, tstop=0):
     chi_radians = winZ[0:n]/(180.0/np.pi)
     g_cos = timeseries.statisticalInefficiency(np.cos(chi_radians))
     g_sin = timeseries.statisticalInefficiency(np.sin(chi_radians))
-    print "g_cos = %.1f | g_sin = %.1f" % (g_cos, g_sin)
+    print("g_cos = %.1f | g_sin = %.1f" % (g_cos, g_sin))
     g_k = max(g_cos, g_sin)
-    print "Correlation time for %s =  %10.3f" % (filename,g_k)
-    indices = timeseries.subsampleCorrelatedData(chi_radians, g=g_k) 
+    print("Correlation time for %s =  %10.3f" % (filename,g_k))
+    indices = timeseries.subsampleCorrelatedData(chi_radians, g=g_k)
 
     # Subsample data.
     shortlen = len(indices)
@@ -108,45 +108,44 @@ if __name__ == '__main__':
     os.chdir(opt.hdir)
     z_min = opt.lower  # min independent variable
     z_max = opt.upper # max independent variable
-    colrange = range(int(z_min), int(z_max)+int(opt.skip), int(opt.skip))
-    colrange = range(0, 370, 10) # vtl fuckup
+    colrange = list(range(int(z_min), int(z_max)+int(opt.skip), int(opt.skip)))
+    colrange = list(range(0, 370, 10)) # vtl fuckup
 
     colvarsFile = "colvars.tcl"
-    trajFile = "npt01.colvars.traj"
-#    trajFile = "npt01_1-5ns.traj"
+    trajFile = "npt01_1-5ns.traj"
     N_max = 2510 # number of snapshots max per window
     nbins = 36 # how many 'x data points' in the pmf
-    
+
     temp = 300.
     kB = 1.381e-23 * 6.022e23 / 1000.0 / 4.184 # Boltzmann constant in kcal/mol/numWins
     beta = 1.0 / (kB * temp) # inverse temperature of simulations (in 1/(kcal/mol))
-    
-    
+
+
     numWins = len(colrange)
     centers = np.zeros([numWins], np.float64)
     springs = np.zeros([numWins], np.float64)
     actuals = np.zeros([numWins,N_max], np.float64)
     winLens = np.zeros([numWins], np.int32)
-    
+
     for i, x in enumerate(colrange):
         # get center and spring constant of each window
         colvf = '%d/%s' % (x, colvarsFile)
         with open(colvf) as f:
-            for line in f: 
+            for line in f:
                 if 'centers' in line: centers[i] = line.split()[1]
                 if 'forceConstant' in line: springs[i] = line.split()[1]
-    
-    
+
+
         # process simulation data for each window
         trajf = '%d/%s' % (x, trajFile)
         with open(trajf) as f:
             ilen, winZ = getWindow(trajf)
             actuals[i][0:ilen] = winZ
             winLens[i] = ilen
-   
+
     # vtl fuckup wrap centers [-180,+180) ================================ ***
     for i, chi in enumerate(centers):
-        print chi
+        print(chi)
         if chi < -180.0:
             centers[i] += 360.0
         if chi >= +180.0:
@@ -155,9 +154,9 @@ if __name__ == '__main__':
     N_max = np.max(winLens)
     u_kn = np.zeros([numWins,N_max], np.float64)
     u_kln = np.zeros([numWins,numWins,N_max], np.float64)
-    
+
     # Construct torsion bins
-    print "Binning data..."
+    print("Binning data...")
     delta = (z_max - z_min) / float(nbins)
     # compute bin centers
     bin_center_i = np.zeros([nbins], np.float64)
@@ -169,9 +168,9 @@ if __name__ == '__main__':
         for n in range(winLens[k]):
             # Compute bin assignment.
             bin_kn[k,n] = int((actuals[k,n] - z_min) / delta)
-    
+
     # Evaluate reduced energies in all umbrellas
-    print "Evaluating reduced potential energies..."
+    print("Evaluating reduced potential energies...")
     for k in range(numWins):
         for n in range(winLens[k]):
             # Compute minimum-image torsion deviation from umbrella center l
@@ -179,26 +178,26 @@ if __name__ == '__main__':
             for l in range(numWins):
                 if (abs(dchi[l]) > 180.0):
                     dchi[l] = 360.0 - abs(dchi[l])
-    
+
             # Compute energy of snapshot n from simulation k in umbrella potential l
             u_kln[k,:,n] = u_kn[k,n] + beta * (springs/2.0) * dchi**2
 
     # Initialize MBAR.
-    print "Running MBAR..."
+    print("Running MBAR...")
     mbar = pymbar.MBAR(u_kln, winLens, verbose = True, method = 'adaptive')
-    
+
     # Compute PMF in unbiased potential (in units of kT).
-    print bin_kn
+    print(bin_kn)
     (f_i, df_i) = mbar.computePMF(u_kn, bin_kn, nbins)
-    
+
     # Write out PMF
-    print "PMF (in units of kT)"
-    print "%8s %8s %8s" % ('bin', 'f', 'df')
+    print("PMF (in units of kT)")
+    print("%8s %8s %8s" % ('bin', 'f', 'df'))
     for i in range(nbins):
-        print "%8.1f %8.3f %8.3f" % (bin_center_i[i], f_i[i], df_i[i])
-    
+        print("%8.1f %8.3f %8.3f" % (bin_center_i[i], f_i[i], df_i[i]))
+
     # Output, relabeling bin angles and energies in kcal/mol
-    print "\nPMF (in units of kcal/mol)"
-    print "%8s %8s %8s" % ('bin', 'f', 'df')
+    print("\nPMF (in units of kcal/mol)")
+    print("%8s %8s %8s" % ('bin', 'f', 'df'))
     for i in range(nbins):
-        print "%8.1f %8.3f %8.3f" % (bin_center_i[i], f_i[i]*0.593, df_i[i]*0.593)
+        print("%8.1f %8.3f %8.3f" % (bin_center_i[i], f_i[i]*0.593, df_i[i]*0.593))
