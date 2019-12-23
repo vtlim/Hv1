@@ -10,12 +10,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.patches as mpatches
-from pymbar import timeseries
 
 # ===========================================
 
 
-def xyPlot(**kwargs):
+def plotScatter(**kwargs):
     filename = opt['input']
     xlabel = opt['xlabel']
     ylabel = opt['ylabel']
@@ -65,37 +64,50 @@ def xyPlot(**kwargs):
     axes = plt.gca()
     #axes.set_ylim([-0.5,3])
     axes.set_xlim([min(x)-0.3,max(x)+0.3])
+#    axes.set_ylim([-6.5,6.5])
+#    axes.set_xlim([-6.5,6.5])
 
 
     ### Color the rainbow.
-    colors = mpl.cm.gist_rainbow(np.linspace(0, 1, numData)) # from red to purple
-    #colors = mpl.cm.rainbow(np.linspace(0, 0.4, len(y_mat))) # from green to purple
-    #colors = mpl.cm.rainbow(np.linspace(0, 0.2, len(y_mat))) # from blue to purple
-    #colors = mpl.cm.rainbow(np.linspace(0.4, 1, len(y_mat)))
+    #colors = mpl.cm.gist_rainbow(np.linspace(0, 1, numData)) # from red to purple
+    colors = mpl.cm.tab10(np.linspace(0, 1, 10))
     markers = ["o","s","8","d","^","x","*","p","v","<","D","+",">","."]
+
+    ### FOR S211R keep colors consistent with this workaround
+    #colors = mpl.cm.gist_rainbow(np.linspace(0, 1, numData-1)) # from red to purple
+    #colors = np.vstack((colors, [0.6, 0.2, 1, 1]))
 
     ### Plot the data.
     if guides:
-        x.append(min(x)-0.4)
+        x.append(min(x)-0.4) # appended at end so does not scatter plot
         x.append(max(x)+0.4)
         sortx = np.sort(np.asarray(x))
+
+        upper_guide = sortx+1.4
+        lower_guide = sortx-1.4
+
         ax1.plot(sortx, sortx, color ='gray', linewidth=0.8,label='_nolegend_')
-        ax1.plot(sortx, sortx+1, ':', color ='gray', linewidth=0.8, label='_nolegend_')
-        ax1.plot(sortx, sortx-1, ':', color ='gray', linewidth=0.8, label='_nolegend_')
+        ax1.plot(sortx, lower_guide, ':', color='gray', linewidth=0.8, label='_nolegend_')
+        ax1.plot(sortx, upper_guide, ':', color='gray', linewidth=0.8, label='_nolegend_')
+        ax1.fill_between(sortx, lower_guide, upper_guide, facecolor='gray', alpha=0.3)
 
     # Points with error bars
     for i, (y, s) in enumerate(zip(y_vals, y_stds)):
         for j, (xi, yi, si) in enumerate(zip(x, y, s)):
+            print(xi,yi)
             p1 = ax1.errorbar(xi, yi, si, color=colors[j], marker=markers[i],
                  label=leglabel[j], markerfacecolor='None')
 
     # Legend for mutations without error bars in legend
     patches = [ mpatches.Patch(color=colors[i], label=leglabel[i]) for i in range(numData) ]
+
     # Custom legend for taut labels
     mark1 = mpl.lines.Line2D([], [], color='black', marker=markers[0],markersize=8)
     mark2 = mpl.lines.Line2D([], [], color='black', marker=markers[1],markersize=8)
+
     # Generate legend.
-    l1 = ax1.legend(handles=patches+[mark1,mark2], labels=leglabel+['taut1','taut2'])
+    l1 = ax1.legend(handles=patches+[mark1,mark2], labels=leglabel+['taut1','taut2'], loc='center left', bbox_to_anchor=(1, 0.5))
+
     # Save then show figure.
     plt.grid()
     plt.savefig(figname, bbox_inches='tight')
@@ -121,4 +133,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     opt = vars(args)
-    xyPlot(**opt)
+    plotScatter(**opt)
