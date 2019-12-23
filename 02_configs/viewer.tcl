@@ -25,6 +25,7 @@
 
 # VMD display settings
 color Display Background white
+display backgroundgradient off
 display projection Orthographic
 display depthcue off
 axes location LowerLeft
@@ -68,7 +69,7 @@ proc view_protein {} {
     # add representation for protein
     mol addrep $moltop
     mol modselect $repcount $moltop protein
-    mol modstyle $repcount $moltop NewRibbons
+    mol modstyle $repcount $moltop NewCartoon
     mol modcolor $repcount $moltop ColorID 6
     #mol modmaterial 1 $moltop Transparent
     incr ::repcount
@@ -76,28 +77,28 @@ proc view_protein {} {
     # add representation for S1
     mol addrep $moltop
     mol modselect $repcount $moltop protein and resid 99 to 125
-    mol modstyle $repcount $moltop NewRibbons
+    mol modstyle $repcount $moltop NewCartoon
     mol modcolor $repcount $moltop ColorID 10
     incr ::repcount
 
     # add representation for S2
     mol addrep $moltop
     mol modselect $repcount $moltop protein and resid 134 to 160
-    mol modstyle $repcount $moltop NewRibbons
+    mol modstyle $repcount $moltop NewCartoon
     mol modcolor $repcount $moltop ColorID 3
     incr ::repcount
 
     # add representation for S3
     mol addrep $moltop
     mol modselect $repcount $moltop protein and resid 168 to 191
-    mol modstyle $repcount $moltop NewRibbons
+    mol modstyle $repcount $moltop NewCartoon
     mol modcolor $repcount $moltop ColorID 7
     incr ::repcount
 
     # add representation for S4
     mol addrep $moltop
     mol modselect $repcount $moltop protein and resid 198 to 222
-    mol modstyle $repcount $moltop NewRibbons
+    mol modstyle $repcount $moltop NewCartoon
     mol modcolor $repcount $moltop ColorID 11
     incr ::repcount
 
