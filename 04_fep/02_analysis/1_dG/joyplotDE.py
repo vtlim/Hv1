@@ -65,12 +65,16 @@ def joyplotDE(all_files, inv_files, equil_steps=None, data_freq=None, outname=No
     if nojoy:
         colors = ['b','r']
         histoptions = {"histtype": "step", "linewidth": 2, "alpha": 1}
+        kdeoptions = {"linewidth": 4, "alpha": 1}
         for i in range(len(all_files)):
-            sns.distplot(df.loc[df['label'] == int(i+1)]['work'], color=colors[i], kde=(not hist), hist=hist, hist_kws=histoptions)
-        plt.xticks(fontsize=14)
-        plt.yticks(fontsize=14)
-        plt.xlabel("dE (kcal/mol)",fontsize=14)
-        plt.ylabel("normalized probability",fontsize=14)
+            sns.distplot(df.loc[df['label'] == int(i+1)]['work'], color=colors[i], kde=(not hist), hist=hist, hist_kws=histoptions, kde_kws=kdeoptions)
+
+#        plt.xlim(-2.8, 3.5)
+        plt.xticks(fontsize=18)
+        plt.yticks(fontsize=18)
+        plt.xlabel("dE (kcal/mol)",fontsize=18)
+        plt.ylabel("normalized probability",fontsize=18)
+
         save_and_return()
         plt.show()
         return
